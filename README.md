@@ -1,11 +1,11 @@
 # ConfigServer Firewall & Security (CSF)
 
 ![License: GPL v3](https://img.shields.io/badge/License-GPLv3-blue.svg)
-[![Version][github-version-img]][github-version-uri]
-[![Downloads][github-downloads-img]][github-downloads-uri]
-[![Size][github-size-img]][github-size-img]
-[![Last Commit][github-commit-img]][github-commit-img]
-[![Contributors][contribs-all-img]](#contributors-)
+[![Version](https://img.shields.io/github/v/tag/Black-HOST/csf?logo=GitHub&label=Version&color=ba5225)](https://github.com/Black-HOST/csf/releases)
+[![Downloads](https://img.shields.io/github/downloads/Black-HOST/csf/total?logo=github&logoColor=FFFFFF&label=Downloads&color=376892)](https://github.com/Black-HOST/csf/releases)
+[![Size](https://img.shields.io/github/repo-size/Black-HOST/csf?logo=github&label=Size&color=59702a)](https://github.com/Black-HOST/csf)
+[![Last Commit](https://img.shields.io/github/last-commit/Black-HOST/csf?logo=github&logoColor=FFFFFF&label=Last%20Commit&color=313131)](https://github.com/Black-HOST/csf/activity)
+[![Contributors](https://img.shields.io/github/contributors/Black-HOST/csf)](https://github.com/Black-HOST/csf/graphs/contributors)
 
 > [!IMPORTANT]
 > **This is a community-maintained fork of the ConfigServer Firewall (CSF).**
