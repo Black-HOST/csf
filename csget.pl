@@ -20,6 +20,8 @@
 use strict;
 use warnings;
 use diagnostics;
+use lib '/usr/local/csf/lib';
+use ConfigServer::Config;
 
 if (my $pid = fork) {
 	exit 0;
@@ -38,7 +40,7 @@ open STDERR, ">","/dev/null";
 
 $0 = "ConfigServer Version Check";
 
-my @downloadservers = ""; # ("https://download.configserver.com", "https://download2.configserver.com");
+my @downloadservers = ConfigServer::Config::getdownloadservers();
 
 system("mkdir -p /var/lib/configserver/");
 system("rm -f /var/lib/configserver/*.txt /var/lib/configserver/*error");

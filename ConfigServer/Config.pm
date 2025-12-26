@@ -436,22 +436,28 @@ sub systemcmd {
 }
 # end systemcmd
 ###############################################################################
-## start getdownloadserver
-sub getdownloadserver {
+## start getdownloadservers
+sub getdownloadservers {
 	my @servers;
 	my $downloadservers = "/etc/csf/downloadservers";
-	my $chosen;
+
 	if (-e $downloadservers) {
 		foreach my $line (slurp($downloadservers)) {
 			$line =~ s/$cleanreg//g;
 			if ($line !~ /^#/) {push @servers, $line}
 		}
-		$chosen = $servers[rand @servers];
 	}
-##	if ($chosen eq "") {$chosen = "download.configserver.com"}
-	return $chosen;
+
+	return @servers;
+}
+## end getdownloadservers
+###############################################################################
+## start getdownloadserver
+sub getdownloadserver {
+	my @servers = &getdownloadservers;
+
+	return $servers[rand @servers];
 }
 ## end getdownloadserver
 ###############################################################################
-
 1;
