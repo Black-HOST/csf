@@ -1,4 +1,4 @@
-name: CSF: Tag & Release
+name: CSF Tag & Release
 
 on:
   push:
