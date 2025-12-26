@@ -1,0 +1,35 @@
+name: CSF: Tag & Release
+
+on:
+  push:
+    branches:
+      - main 
+    
+    paths:
+      - 'version.txt' # make new release only on version change
+
+  workflow_dispatch: {}
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Get version
+        run: |
+          VERSION=$(cat version.txt | xargs)
+          echo "TAG=v$VERSION" >> $GITHUB_ENV
+
+      - name: Build release archive
+        run: git archive --format=tar.gz --prefix="csf/" -o "csf.tgz" HEAD
+
+      - name: Do the release
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: gh release create "$TAG" ./csf.tgz --repo="$GITHUB_REPOSITORY" --title="$TAG" --generate-notes
