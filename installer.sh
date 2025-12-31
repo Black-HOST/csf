@@ -74,7 +74,7 @@ install_dependencies() {
     info "Installing dependencies..."
 
     if [[ "$PM" == "apt" ]]; then
-        install_package "wget curl tar perl libwww-perl liblwp-protocol-https-perl libgd-graph-perl iptables host unzip sendmail"
+        install_package "wget curl tar perl libwww-perl liblwp-protocol-https-perl libgd-graph-perl iptables bind-utils unzip sendmail"
     elif [[ "$PM" == "yum" || "$PM" == "dnf" ]]; then
         install_package "wget tar curl perl perl-libwww-perl.noarch perl-LWP-Protocol-https.noarch perl-GDGraph perl-Math-BigInt.noarch iptables host unzip sendmail iptables host unzip sendmail"
     else
