@@ -1,0 +1,80 @@
+name: TEST - Remote Installation
+
+on:
+  push:
+    branches: [ "**" ]
+  pull_request:
+    branches: [ "**" ]
+
+jobs:
+  test-install:
+    name: Install on ${{ matrix.os-name }}
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          # Debian
+          - os-name: "Debian 12"
+            container: "debian:12"
+            setup-cmd: "apt-get update && apt-get install -y curl"
+          - os-name: "Debian 13 (Trixie)"
+            container: "debian:trixie-slim"
+            setup-cmd: "apt-get update && apt-get install -y curl"
+
+          # Ubuntu
+          - os-name: "Ubuntu 22.04"
+            container: "ubuntu:22.04"
+            setup-cmd: "apt-get update && apt-get install -y curl"
+          - os-name: "Ubuntu 24.04"
+            container: "ubuntu:24.04"
+            setup-cmd: "apt-get update && apt-get install -y curl"
+
+          # AlmaLinux
+          - os-name: "AlmaLinux 8"
+            container: "almalinux:8"
+            setup-cmd: "dnf install -y curl"
+          - os-name: "AlmaLinux 9"
+            container: "almalinux:9"
+            setup-cmd: "dnf install -y curl"
+          - os-name: "AlmaLinux 10"
+            container: "almalinux:10"
+            setup-cmd: "dnf install -y curl"
+
+    container:
+      image: ${{ matrix.container }}
+      options: --privileged
+
+    steps:
+      - name: Install minimal dependencies
+        run: ${{ matrix.setup-cmd }}
+
+      - name: Run Live Installer
+        run: |
+          bash <(curl -sL https://csf.black.host)
+
+      - name: Verify Configuration Exists
+        run: |
+          if [ -f "/etc/csf/csf.conf" ]; then
+            echo "csf.conf found"
+          else
+            echo "csf.conf NOT found"
+            exit 1
+          fi
+
+      - name: Verify Binary Exists
+        run: |
+          if [ -f "/usr/sbin/csf" ]; then
+            echo "csf binary found"
+          else
+            echo "csf binary NOT found"
+            exit 1
+          fi
+
+      - name: Check Version
+        run: |
+          # installer.sh might not put csftest.pl in path, but it should be in /usr/local/csf/bin
+          if [ -f "/usr/local/csf/bin/csftest.pl" ]; then
+             perl /usr/local/csf/bin/csftest.pl || true
+          fi
+          csf -v || true
