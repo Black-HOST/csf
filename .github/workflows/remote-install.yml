@@ -7,7 +7,7 @@ on:
     branches: [ "**" ]
 
 jobs:
-  test-install:
+  remote-install:
     name: Install on ${{ matrix.os-name }}
     runs-on: ubuntu-latest
     strategy:
@@ -33,11 +33,13 @@ jobs:
           # AlmaLinux
           - os-name: "AlmaLinux 8"
             container: "almalinux:8"
-            setup-cmd: "dnf install -y curl"
+            setup-cmd: "dnf install -y epel-release curl"
           - os-name: "AlmaLinux 9"
             container: "almalinux:9"
+            setup-cmd: "dnf install -y epel-release"
           - os-name: "AlmaLinux 10"
             container: "almalinux:10"
+            setup-cmd: "dnf install -y epel-release"
 
     container:
       image: ${{ matrix.container }}
