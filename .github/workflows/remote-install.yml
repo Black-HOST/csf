@@ -50,6 +50,7 @@ jobs:
         run: ${{ matrix.setup-cmd }}
 
       - name: Run Live Installer
+        shell: bash
         run: |
           bash <(curl -sL https://csf.black.host)
 
