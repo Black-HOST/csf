@@ -83,79 +83,79 @@ if [ -e "/etc/csf/alert.txt" ]; then
 fi
 
 if [ ! -e "/etc/csf/csf.conf" ]; then
-	cp -avf csf.conf /etc/csf/.
+	cp -avf conf/csf.conf /etc/csf/.
 fi
 
 if [ ! -e "/etc/csf/csf.allow" ]; then
-	cp -avf csf.allow /etc/csf/.
+	cp -avf conf/csf.allow /etc/csf/.
 fi
 if [ ! -e "/etc/csf/csf.deny" ]; then
-	cp -avf csf.deny /etc/csf/.
+	cp -avf conf/csf.deny /etc/csf/.
 fi
 if [ ! -e "/etc/csf/csf.redirect" ]; then
-	cp -avf csf.redirect /etc/csf/.
+	cp -avf conf/csf.redirect /etc/csf/.
 fi
 if [ ! -e "/etc/csf/csf.resellers" ]; then
-	cp -avf csf.resellers /etc/csf/.
+	cp -avf conf/csf.resellers /etc/csf/.
 fi
 if [ ! -e "/etc/csf/csf.dirwatch" ]; then
-	cp -avf csf.dirwatch /etc/csf/.
+	cp -avf conf/csf.dirwatch /etc/csf/.
 fi
 if [ ! -e "/etc/csf/csf.syslogs" ]; then
-	cp -avf csf.syslogs /etc/csf/.
+	cp -avf conf/csf.syslogs /etc/csf/.
 fi
 if [ ! -e "/etc/csf/csf.logfiles" ]; then
-	cp -avf csf.logfiles /etc/csf/.
+	cp -avf conf/csf.logfiles /etc/csf/.
 fi
 if [ ! -e "/etc/csf/csf.logignore" ]; then
-	cp -avf csf.logignore /etc/csf/.
+	cp -avf conf/csf.logignore /etc/csf/.
 fi
 if [ ! -e "/etc/csf/csf.blocklists" ]; then
-	cp -avf csf.blocklists /etc/csf/.
+	cp -avf conf/csf.blocklists /etc/csf/.
 else
-	cp -avf csf.blocklists /etc/csf/csf.blocklists.new
+	cp -avf conf/csf.blocklists /etc/csf/csf.blocklists.new
 fi
 if [ ! -e "/etc/csf/csf.ignore" ]; then
-	cp -avf csf.ignore /etc/csf/.
+	cp -avf conf/csf.ignore /etc/csf/.
 fi
 if [ ! -e "/etc/csf/csf.pignore" ]; then
-	cp -avf csf.pignore /etc/csf/.
+	cp -avf conf/csf.pignore /etc/csf/.
 fi
 if [ ! -e "/etc/csf/csf.rignore" ]; then
-	cp -avf csf.rignore /etc/csf/.
+	cp -avf conf/csf.rignore /etc/csf/.
 fi
 if [ ! -e "/etc/csf/csf.fignore" ]; then
-	cp -avf csf.fignore /etc/csf/.
+	cp -avf conf/csf.fignore /etc/csf/.
 fi
 if [ ! -e "/etc/csf/csf.signore" ]; then
-	cp -avf csf.signore /etc/csf/.
+	cp -avf conf/csf.signore /etc/csf/.
 fi
 if [ ! -e "/etc/csf/csf.suignore" ]; then
-	cp -avf csf.suignore /etc/csf/.
+	cp -avf conf/csf.suignore /etc/csf/.
 fi
 if [ ! -e "/etc/csf/csf.uidignore" ]; then
-	cp -avf csf.uidignore /etc/csf/.
+	cp -avf conf/csf.uidignore /etc/csf/.
 fi
 if [ ! -e "/etc/csf/csf.mignore" ]; then
-	cp -avf csf.mignore /etc/csf/.
+	cp -avf conf/csf.mignore /etc/csf/.
 fi
 if [ ! -e "/etc/csf/csf.sips" ]; then
-	cp -avf csf.sips /etc/csf/.
+	cp -avf conf/csf.sips /etc/csf/.
 fi
 if [ ! -e "/etc/csf/csf.dyndns" ]; then
-	cp -avf csf.dyndns /etc/csf/.
+	cp -avf conf/csf.dyndns /etc/csf/.
 fi
 if [ ! -e "/etc/csf/csf.syslogusers" ]; then
-	cp -avf csf.syslogusers /etc/csf/.
+	cp -avf conf/csf.syslogusers /etc/csf/.
 fi
 if [ ! -e "/etc/csf/csf.smtpauth" ]; then
-	cp -avf csf.smtpauth /etc/csf/.
+	cp -avf conf/csf.smtpauth /etc/csf/.
 fi
 if [ ! -e "/etc/csf/csf.rblconf" ]; then
-	cp -avf csf.rblconf /etc/csf/.
+	cp -avf conf/csf.rblconf /etc/csf/.
 fi
 if [ ! -e "/etc/csf/csf.cloudflare" ]; then
-	cp -avf csf.cloudflare /etc/csf/.
+	cp -avf conf/csf.cloudflare /etc/csf/.
 fi
 
 if [ ! -e "/usr/local/csf/tpl/alert.txt" ]; then
@@ -295,7 +295,7 @@ if [ ! -e "/etc/csf/messenger/index.recaptcha.html" ]; then
 	cp -avf messenger/index.recaptcha.html /etc/csf/messenger/.
 fi
 if [ ! -e "/etc/csf/ui" ]; then
-	cp -avf ui /etc/csf/.
+	cp -avf conf/ui /etc/csf/.
 fi
 if [ -e "/etc/cron.d/csfcron.sh" ]; then
 	mv -fv /etc/cron.d/csfcron.sh /etc/cron.d/csf-cron
@@ -393,13 +393,13 @@ cp -avf JSON /usr/local/csf/lib/
 cp -avf version/* /usr/local/csf/lib/
 cp -avf csf.div /usr/local/csf/lib/
 cp -avf csfajaxtail.js /usr/local/csf/lib/
-cp -avf ui/images /etc/csf/ui/.
+cp -avf conf/ui/images /etc/csf/ui/.
 cp -avf profiles /usr/local/csf/
-cp -avf csf.conf /usr/local/csf/profiles/reset_to_defaults.conf
-cp -avf cpanel.comodo.ignore /etc/csf/
-cp -avf cpanel.comodo.allow /etc/csf/
-cp -avf cpanel.ignore /etc/csf/
-cp -avf cpanel.allow /etc/csf/
+cp -avf conf/csf.conf /usr/local/csf/profiles/reset_to_defaults.conf
+cp -avf conf/cpanel.comodo.ignore /etc/csf/
+cp -avf conf/cpanel.comodo.allow /etc/csf/
+cp -avf conf/cpanel.ignore /etc/csf/
+cp -avf conf/cpanel.allow /etc/csf/
 cp -avf messenger/*.php /etc/csf/messenger/.
 cp -avf lfd.logrotate /etc/logrotate.d/lfd
 
