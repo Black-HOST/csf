@@ -76,7 +76,7 @@ install_dependencies() {
     if [[ "$PM" == "apt" ]]; then
         install_package "wget curl tar perl libwww-perl liblwp-protocol-https-perl libgd-graph-perl iptables host unzip sendmail"
     elif [[ "$PM" == "yum" || "$PM" == "dnf" ]]; then
-        install_package "wget tar curl perl perl-libwww-perl.noarch perl-LWP-Protocol-https.noarch perl-GDGraph perl-Math-BigInt.noarch iptables bind-utils unzip sendmail"
+        install_package "--allowerasing wget tar curl perl perl-libwww-perl.noarch perl-LWP-Protocol-https.noarch perl-GDGraph perl-Math-BigInt.noarch iptables bind-utils unzip sendmail"
     else
         warn "Could not detect package manager. Skipping dependency installation."
     fi

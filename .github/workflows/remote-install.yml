@@ -3,8 +3,15 @@ name: TEST - Remote Installation
 on:
   push:
     branches: [ "**" ]
+    paths:
+      - '**/install*'
+  
   pull_request:
     branches: [ "**" ]
+    paths:
+      - '**/install*'
+
+  workflow_dispatch: {}
 
 jobs:
   remote-install:
