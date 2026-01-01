@@ -36,10 +36,8 @@ jobs:
             setup-cmd: "dnf install -y curl"
           - os-name: "AlmaLinux 9"
             container: "almalinux:9"
-            setup-cmd: "dnf install -y curl"
           - os-name: "AlmaLinux 10"
             container: "almalinux:10"
-            setup-cmd: "dnf install -y curl"
 
     container:
       image: ${{ matrix.container }}
@@ -47,6 +45,7 @@ jobs:
 
     steps:
       - name: Install minimal dependencies
+        if: ${{ matrix.setup-cmd }} 
         run: ${{ matrix.setup-cmd }}
 
       - name: Run Live Installer
