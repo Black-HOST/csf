@@ -402,7 +402,7 @@ cp -avf csf.div /usr/local/csf/lib/
 cp -avf csfajaxtail.js /usr/local/csf/lib/
 cp -avf conf/ui/images /etc/csf/ui/.
 cp -avf profiles /usr/local/csf/
-cp -avf csf.conf /usr/local/csf/profiles/reset_to_defaults.conf
+cp -avf conf/csf.interworx.conf /usr/local/csf/profiles/reset_to_defaults.conf
 cp -avf lfd.logrotate /etc/logrotate.d/lfd
 chcon --reference /etc/logrotate.d /etc/logrotate.d/lfd
 cp -avf apf_stub.pl /etc/csf/

@@ -389,7 +389,7 @@ cp -avf csf.div /usr/local/csf/lib/
 cp -avf csfajaxtail.js /usr/local/csf/lib/
 cp -avf conf/ui/images /etc/csf/ui/.
 cp -avf profiles /usr/local/csf/
-cp -avf csf.conf /usr/local/csf/profiles/reset_to_defaults.conf
+cp -avf conf/csf.directadmin.conf /usr/local/csf/profiles/reset_to_defaults.conf
 cp -avf lfd.logrotate /etc/logrotate.d/lfd
 
 rm -fv /etc/csf/csf.spamhaus /etc/csf/csf.dshield /etc/csf/csf.tor /etc/csf/csf.bogon
