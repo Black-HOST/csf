@@ -73,6 +73,6 @@ Any contributions are welcome. Before submitting your contribution, please revie
 This project is licensed under the **GNU General Public License v3.0 (GPLv3)**.
 See the [LICENSE](LICENSE) file for details.
 
-The original code was released by Way to the Web Limited [https://github.com/waytotheweb/scripts](https://web.archive.org/web/20250831101013/https://github.com/waytotheweb/scripts) but was subsequently removed from GitHub. Consequently, GitHub now incorrectly identifies a repository by mappy9211 as the primary source. 
+The original code was released by Way to the Web Limited [https://github.com/waytotheweb/scripts](https://web.archive.org/web/20250831101013/https://github.com/waytotheweb/scripts) but was subsequently removed from GitHub. We created a fork from Jonathan (chrirpy) original work at [config-server-scripts](https://github.com/Black-HOST/config-server-scripts) and stands as original reference for all config server scripts.
 
 This fork continues the legacy of Way to the Web Limited and Jonathan Michaelson, with the goal of ensuring this project remains free forever.
