@@ -63,6 +63,7 @@ Any contributions are welcome. Before submitting your contribution, please revie
 
 - [PR Template](.github/PULL_REQUEST_TEMPLATE.md)
 - [Contributor Policy](CONTRIBUTING.md)
+- [Contributing Guide (Wiki)](https://github.com/Black-HOST/csf/wiki/Contributing)
 
 <br />
 
@@ -75,4 +76,4 @@ See the [LICENSE](LICENSE) file for details.
 
 The original code was released by Way to the Web Limited [https://github.com/waytotheweb/scripts](https://web.archive.org/web/20250831101013/https://github.com/waytotheweb/scripts) but was subsequently removed from GitHub. We created a fork from Jonathan (chrirpy) original work at [config-server-scripts](https://github.com/Black-HOST/config-server-scripts) and stands as original reference for all config server scripts.
 
-This fork continues the legacy of Way to the Web Limited and Jonathan Michaelson, with the goal of ensuring this project remains free forever.
+This fork continues the legacy of Way to the Web Limited and Jonathan Michaelson work on the CSF firewall, with the goal of ensuring this project remains updated and free forever.

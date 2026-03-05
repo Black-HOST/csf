@@ -8,6 +8,15 @@
 <!-- Link issues (e.g. Closes #123, Fixes #456) -->
 
 
+## Branching
+
+Base branch selected:
+- [ ] `main`
+
+Head branch name:
+<!-- e.g. feature/342-ipv6-installer-cleanup | fix/355-da-installer-path-bug | chore/ci-shellcheck | hotfix/15.01.1-csf-conf-path -->
+
+
 ## Type of Change
 
 - [ ] Bug fix
@@ -50,6 +59,8 @@ Test notes:
 
 ## Checklist
 
+- [ ] PR base branch is `main`
+- [ ] This PR does **not** modify `version.txt` (maintainers-only)
 - [ ] I reviewed changed paths and file references
 - [ ] I updated docs/comments if needed
 - [ ] I kept changes focused and minimal
