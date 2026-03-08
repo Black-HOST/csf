@@ -44,11 +44,15 @@ sub checkip {
 	my $ip;
 	my $cidr;
 	if (ref $ipin) {
+		unless (defined ${$ipin}) {return 0}
 		($ip,$cidr) = split(/\//,${$ipin});
 		$ipref = 1;
 	} else {
+		unless (defined $ipin) {return 0}
 		($ip,$cidr) = split(/\//,$ipin);
 	}
+	$ip //= "";
+	$cidr //= "";
 	my $testip = $ip;
 
 	if ($cidr ne "") {
@@ -100,11 +104,15 @@ sub cccheckip {
 	my $ip;
 	my $cidr;
 	if (ref $ipin) {
+		unless (defined ${$ipin}) {return 0}
 		($ip,$cidr) = split(/\//,${$ipin});
 		$ipref = 1;
 	} else {
+		unless (defined $ipin) {return 0}
 		($ip,$cidr) = split(/\//,$ipin);
 	}
+	$ip //= "";
+	$cidr //= "";
 	my $testip = $ip;
 
 	if ($cidr ne "") {

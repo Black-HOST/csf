@@ -1,0 +1,32 @@
+name: Tests
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  unit:
+    name: Unit
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Show Perl toolchain
+        shell: bash
+        run: |
+          set -euo pipefail
+          perl -v
+          echo '---'
+          prove --version
+
+      - name: Run unit tests
+        shell: bash
+        run: |
+          set -euo pipefail
+          prove -v -r .github/tests/unit/
