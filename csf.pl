@@ -595,7 +595,7 @@ sub doclustertempdeny {
 	my $perm = 0;
 	if ($timeout =~ /^(\d*)(m|h|d)/i) {
 		my $secs = $1;
-		my $dur = $2;
+		my $dur = lc $2;
 		if ($dur eq "m") {$timeout = $secs * 60}
 		elsif ($dur eq "h") {$timeout = $secs * 60 * 60}
 		elsif ($dur eq "d") {$timeout = $secs * 60 * 60 * 24}
@@ -603,13 +603,13 @@ sub doclustertempdeny {
 	}
 
 	my $iptype = checkip(\$ip);
-	if ($iptype == 6 and !$config{IPV6}) {
-		print "failed: [$ip] is valid IPv6 but IPV6 is not enabled in csf.conf\n";
-	}
-
 	unless ($iptype) {
 		print "csf: [$ip] is not a valid PUBLIC IP\n";
 		return;
+	}
+
+	if ($iptype == 6 and !$config{IPV6}) {
+		print "failed: [$ip] is valid IPv6 but IPV6 is not enabled in csf.conf\n";
 	}
 
 	if ($timeout =~ /\D/) {
@@ -627,7 +627,7 @@ sub doclustertempdeny {
 	$comment =~ s/\-p\s*[\w\,\*\;]+//ig;
 	$comment =~ s/^\s*|\s*$//g;
 	if ($comment eq "") {$comment = "Manually added: ".iplookup($ip)}
-	if ($timeout < 2) {$timeout = 3600}
+	if (!length $timeout || $timeout < 2) {$timeout = 3600}
 	if ($ports eq "") {$ports = "*"}
 
 	if (!checkip(\$ip)) {
@@ -690,7 +690,7 @@ sub doclustertempallow {
 	my $perm = 0;
 	if ($timeout =~ /^(\d*)(m|h|d)/i) {
 		my $secs = $1;
-		my $dur = $2;
+		my $dur = lc $2;
 		if ($dur eq "m") {$timeout = $secs * 60}
 		elsif ($dur eq "h") {$timeout = $secs * 60 * 60}
 		elsif ($dur eq "d") {$timeout = $secs * 60 * 60 * 24}
@@ -698,13 +698,13 @@ sub doclustertempallow {
 	}
 
 	my $iptype = checkip(\$ip);
-	if ($iptype == 6 and !$config{IPV6}) {
-		print "failed: [$ip] is valid IPv6 but IPV6 is not enabled in csf.conf\n";
-	}
-
 	unless ($iptype) {
 		print "csf: [$ip] is not a valid PUBLIC IP\n";
 		return;
+	}
+
+	if ($iptype == 6 and !$config{IPV6}) {
+		print "failed: [$ip] is valid IPv6 but IPV6 is not enabled in csf.conf\n";
 	}
 
 	if ($timeout =~ /\D/) {
@@ -722,7 +722,7 @@ sub doclustertempallow {
 	$comment =~ s/\-p\s*[\w\,\*\;]+//ig;
 	$comment =~ s/^\s*|\s*$//g;
 	if ($comment eq "") {$comment = "Manually added: ".iplookup($ip)}
-	if ($timeout < 2) {$timeout = 3600}
+	if (!length $timeout || $timeout < 2) {$timeout = 3600}
 	if ($ports eq "") {$ports = "*"}
 
 	if (!checkip(\$ip)) {
@@ -3865,7 +3865,7 @@ $table, $chain, $rest
 	foreach my $line (@output) {
 		if ($line =~ /^Chain\s([\w\_]*)\s/) {$chain = $1}
 		if ($line =~ /^(\S+) table:$/) {$table = $1}
-		if ($chain eq "acctboth") {next}
+		if (defined $chain and $chain eq "acctboth") {next}
 		if (!$head and ($line =~ /^num/)) {print "\nTable  Chain            $line\n"; $head = 1}
 		if ($line !~ /\d+/) {next}
 		my (undef,undef,undef,$action,undef,undef,undef,undef,$source,$destination,$options) = split(/\s+/,$line,11);
@@ -3874,14 +3874,14 @@ $table, $chain, $rest
 		if ($line =~ /\b$ipstring\b/i) {
 			$hit = 1;
 		} else {
-			if (($source =~ /\//) and ($source ne "0.0.0.0/0")) {
+			if (defined $source and ($source =~ /\//) and ($source ne "0.0.0.0/0")) {
 				if (checkip(\$source)) {
 					my $cidr = Net::CIDR::Lite->new;
 					eval {local $SIG{__DIE__} = undef; $cidr->add($source)};
 					if ($cidr->find($ipmatch)) {$hit = 1}
 				}
 			}
-			if (!$hit and ($destination =~ /\//) and ($destination ne "0.0.0.0/0")) {
+			if (!$hit and defined $destination and ($destination =~ /\//) and ($destination ne "0.0.0.0/0")) {
 				if (checkip(\$destination)) {
 					my $cidr = Net::CIDR::Lite->new;
 					eval {local $SIG{__DIE__} = undef; $cidr->add($destination)};
@@ -4011,7 +4011,7 @@ $table, $chain, $rest
 		foreach my $line (@output) {
 			if ($line =~ /^Chain\s([\w\_]*)\s/) {$chain = $1}
 			if ($line =~ /^(\S+) table:$/) {$table = $1}
-			if ($chain eq "acctboth") {next}
+			if (defined $chain and $chain eq "acctboth") {next}
 			if (!$head and ($line =~ /^num/)) {print "\nTable  Chain            $line\n"; $head = 1}
 
 			if ($line !~ /\d+/) {next}
@@ -4021,14 +4021,14 @@ $table, $chain, $rest
 			if ($line =~ /\b$ipstring\b/i) {
 				$hit = 1;
 			} else {
-				if (($source =~ /\//) and ($source ne "::/0")) {
+				if (defined $source and ($source =~ /\//) and ($source ne "::/0")) {
 					if (checkip(\$source)) {
 						my $cidr = Net::CIDR::Lite->new;
 						eval {local $SIG{__DIE__} = undef; $cidr->add($source)};
 						if ($cidr->find($ipmatch)) {$hit = 1}
 					}
 				}
-				if (!$hit and ($destination =~ /\//) and ($destination ne "::/0")) {
+				if (!$hit and defined $destination and ($destination =~ /\//) and ($destination ne "::/0")) {
 					if (checkip(\$destination)) {
 						my $cidr = Net::CIDR::Lite->new;
 						eval {local $SIG{__DIE__} = undef; $cidr->add($destination)};
@@ -4234,7 +4234,7 @@ sub dotempdeny {
 	my $port = "";
 	if ($timeout =~ /^(\d*)(m|h|d)/i) {
 		my $secs = $1;
-		my $dur = $2;
+		my $dur = lc $2;
 		if ($dur eq "m") {$timeout = $secs * 60}
 		elsif ($dur eq "h") {$timeout = $secs * 60 * 60}
 		elsif ($dur eq "d") {$timeout = $secs * 60 * 60 * 24}
@@ -4242,13 +4242,13 @@ sub dotempdeny {
 	}
 
 	my $iptype = checkip(\$ip);
-	if ($iptype == 6 and !$config{IPV6}) {
-		print "failed: [$ip] is valid IPv6 but IPV6 is not enabled in csf.conf\n";
-	}
-
 	unless ($iptype) {
 		print "csf: [$ip] is not a valid PUBLIC IP\n";
 		return;
+	}
+
+	if ($iptype == 6 and !$config{IPV6}) {
+		print "failed: [$ip] is valid IPv6 but IPV6 is not enabled in csf.conf\n";
 	}
 
 	&getethdev;
@@ -4300,7 +4300,7 @@ sub dotempdeny {
 	my $dropout = $config{DROP_OUT};
 	if ($config{DROP_IP_LOGGING}) {$dropin = "LOGDROPIN"}
 	if ($config{DROP_OUT_LOGGING}) {$dropout = "LOGDROPOUT"}
-	if ($timeout < 2) {$timeout = 3600}
+	if (!length $timeout || $timeout < 2) {$timeout = 3600}
 	if ($port =~ /\*/) {$port = ""}
 
 	if ($inout =~ /in/) {
@@ -4372,7 +4372,7 @@ sub dotempallow {
 	my $port = "";
 	if ($timeout =~ /^(\d*)(m|h|d)/i) {
 		my $secs = $1;
-		my $dur = $2;
+		my $dur = lc $2;
 		if ($dur eq "m") {$timeout = $secs * 60}
 		elsif ($dur eq "h") {$timeout = $secs * 60 * 60}
 		elsif ($dur eq "d") {$timeout = $secs * 60 * 60 * 24}
@@ -4380,13 +4380,13 @@ sub dotempallow {
 	}
 
 	my $iptype = checkip(\$ip);
-	if ($iptype == 6 and !$config{IPV6}) {
-		print "failed: [$ip] is valid IPv6 but IPV6 is not enabled in csf.conf\n";
-	}
-
 	unless ($iptype) {
 		print "csf: [$ip] is not a valid PUBLIC IP\n";
 		return;
+	}
+
+	if ($iptype == 6 and !$config{IPV6}) {
+		print "failed: [$ip] is valid IPv6 but IPV6 is not enabled in csf.conf\n";
 	}
 	if ($timeout =~ /\D/) {
 		$portdir = join(" ",$timeout,$portdir);
@@ -4426,7 +4426,7 @@ sub dotempallow {
 		exit 0;
 	}
 
-	if ($timeout < 2) {$timeout = 3600}
+	if (!length $timeout || $timeout < 2) {$timeout = 3600}
 	if ($port =~ /\*/) {$port = ""}
 
 	&getethdev;
