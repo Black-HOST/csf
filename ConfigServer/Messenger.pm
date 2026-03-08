@@ -42,6 +42,8 @@ our $VERSION     = 3.00;
 our @ISA         = qw(Exporter);
 our @EXPORT_OK   = qw();
 
+use constant MAX_LINE_LENGTH => 4096;
+
 my $slurpreg = ConfigServer::Slurp->slurpreg;
 my $cleanreg = ConfigServer::Slurp->cleanreg;
 
@@ -367,15 +369,7 @@ sub messenger {
 							$hostaddress =~ s/^::ffff://;
 
 							if ($type eq "HTML") {
-								while ($firstline !~ /\n$/) {
-									my $char;
-									$client->read($char,1);
-									$firstline .= $char;
-									if ($char eq "") {exit}
-									if (length $firstline > 2048) {last}
-								}
-								chomp $firstline;
-								if ($firstline =~ /\r$/) {chop $firstline}
+								$firstline = _read_request_line($client);
 							}
 
 							&messengerlog($homedir,"Client connection [$peeraddress] [$firstline]");
@@ -1046,6 +1040,23 @@ EOF
 	return;
 }
 # end messengerv3
+###############################################################################
+# start _read_request_line
+sub _read_request_line {
+	my $client = shift;
+	my $firstline = "";
+	while ($firstline !~ /\n$/) {
+		my $char;
+		$client->read($char,1);
+		$firstline .= $char;
+		if ($char eq "") {exit}
+		if (length $firstline > MAX_LINE_LENGTH) {last}
+	}
+	chomp $firstline;
+	if ($firstline =~ /\r$/) {chop $firstline}
+	return $firstline;
+}
+# end _read_request_line
 ###############################################################################
 # start messengerlog
 sub messengerlog {
