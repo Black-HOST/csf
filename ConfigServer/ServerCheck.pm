@@ -450,7 +450,7 @@ sub servercheck {
 	&addline($status,"Check nobody cron","You have a nobody cron log file - you should check that this has not been created by an exploit");
 
 	$status = 0;
-	my ($isfedora, $isrh, $version, $conf) = 0;
+	my ($isfedora, $isrh, $isdebian, $isubuntu, $version, $conf) = (0,0,0,0,0,"");
 	if (-e "/etc/fedora-release") {
 		open (my $IN, "<", "/etc/fedora-release");
 		flock ($IN, LOCK_SH);
@@ -465,12 +465,32 @@ sub servercheck {
 		close ($IN);
 		$isrh = 1;
 		if ($conf =~ /release (\d+)/i) {$version = $1}
+	} elsif (-e "/etc/lsb-release") {
+		open (my $IN, "<", "/etc/lsb-release");
+		flock ($IN, LOCK_SH);
+		my @lsb = <$IN>;
+		close ($IN);
+		chomp @lsb;
+		foreach my $line (@lsb) {
+			if ($line =~ /^DISTRIB_ID="?Ubuntu"?$/i) {$isubuntu = 1; $isdebian = 0}
+			elsif ($line =~ /^DISTRIB_DESCRIPTION=(.*)$/) {$conf = $1; $conf =~ s/^"|"$//g}
+			elsif ($line =~ /^DISTRIB_RELEASE="?([\d\.]+)"?$/) {$version = $1}
+		}
+	} elsif (-e "/etc/debian_version") {
+		open (my $IN, "<", "/etc/debian_version");
+		flock ($IN, LOCK_SH);
+		$conf = <$IN>;
+		close ($IN);
+		chomp $conf;
+		$isdebian = 1;
+		if ($conf =~ /^([\d\.]+)/) {$version = $1}
+		$conf = "Debian $conf";
 	}
 	chomp $conf;
 
-	if ($isrh or $isfedora) {
-		if (($isfedora and $version < 30) or ($isrh and $version < 6)) {$status = 1}
-		&addline($status,"Check Operating System support","You are running an OS - <i>$conf</i> - that is no longer supported by the OS vendor, or is about to become obsolete. This means that you will be receiving no OS updates (i.e. application or security bug fixes) or kernel updates and should consider moving to an OS that is supported as soon as possible");
+	if ($isrh or $isfedora or $isdebian or $isubuntu) {
+		if (($isfedora and $version < 30) or ($isrh and $version < 6) or ($isdebian and $version < 10) or ($isubuntu and $version < 20.04)) {$status = 1}
+		&addline($status,"Unsuported OS","You are running an OS - <i>$conf</i> - that is no longer supported by the OS vendor, or is about to become obsolete. This means that you will be receiving no OS updates (i.e. application or security bug fixes) or kernel updates and should consider moving to an OS that is supported as soon as possible");
 	}
 
 	$status = 0;
