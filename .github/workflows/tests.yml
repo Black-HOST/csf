@@ -30,3 +30,43 @@ jobs:
         run: |
           set -euo pipefail
           prove -v -r .github/tests/unit/
+
+  uninstall:
+    name: "Uninstall – ${{ matrix.os-name }}"
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os-name: "Ubuntu 24.04"
+            container: "ubuntu:24.04"
+            setup-cmd: >-
+              apt-get update && apt-get install -y
+              wget curl tar perl libwww-perl liblwp-protocol-https-perl libgd-graph-perl iptables host unzip sendmail
+
+    container:
+      image: ${{ matrix.container }}
+      options: --privileged
+
+    steps:
+      - name: Install OS dependencies
+        if: ${{ matrix.setup-cmd }}
+        run: ${{ matrix.setup-cmd }}
+
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Install CSF from source
+        shell: bash
+        run: |
+          set -euo pipefail
+          cd "$GITHUB_WORKSPACE"
+          sh install.sh
+
+      - name: Run uninstaller
+        shell: bash
+        run: |
+          set -uo pipefail
+          cd "$GITHUB_WORKSPACE"
+          bash uninstall.sh
+
