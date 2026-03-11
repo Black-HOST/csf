@@ -378,7 +378,7 @@ cp -avf csf/* da/images/
 cp -avf csf/* interworx/images/
 
 cp -avf messenger/*.php /etc/csf/messenger/
-cp -avf uninstall.interworx.sh /usr/local/csf/bin/uninstall.sh
+cp -avf uninstall.sh /usr/local/csf/bin/
 cp -avf csftest.pl /usr/local/csf/bin/
 cp -avf remove_apf_bfd.sh /usr/local/csf/bin/
 cp -avf readme.txt /etc/csf/
