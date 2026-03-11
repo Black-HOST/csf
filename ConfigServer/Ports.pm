@@ -159,10 +159,11 @@ sub openports {
 
 	$config{TCP_IN} =~ s/\s//g;
 	foreach my $entry (split(/,/,$config{TCP_IN})) {
+		if ($entry eq "") {next}
 		if ($entry =~ /^(\d+):(\d+)$/) {
 			my $from = $1;
 			my $to = $2;
-			for (my $port = $from; $port < $to ; $port++) {
+			for (my $port = $from; $port <= $to ; $port++) {
 				$ports{tcp}{$port} = 1;
 			}
 		} else {
@@ -171,10 +172,11 @@ sub openports {
 	}
 	$config{TCP6_IN} =~ s/\s//g;
 	foreach my $entry (split(/,/,$config{TCP6_IN})) {
+		if ($entry eq "") {next}
 		if ($entry =~ /^(\d+):(\d+)$/) {
 			my $from = $1;
 			my $to = $2;
-			for (my $port = $from; $port < $to ; $port++) {
+			for (my $port = $from; $port <= $to ; $port++) {
 				$ports{tcp6}{$port} = 1;
 			}
 		} else {
@@ -183,10 +185,11 @@ sub openports {
 	}
 	$config{UDP_IN} =~ s/\s//g;
 	foreach my $entry (split(/,/,$config{UDP_IN})) {
+		if ($entry eq "") {next}
 		if ($entry =~ /^(\d+):(\d+)$/) {
 			my $from = $1;
 			my $to = $2;
-			for (my $port = $from; $port < $to ; $port++) {
+			for (my $port = $from; $port <= $to ; $port++) {
 				$ports{udp}{$port} = 1;
 			}
 		} else {
@@ -195,10 +198,11 @@ sub openports {
 	}
 	$config{UDP6_IN} =~ s/\s//g;
 	foreach my $entry (split(/,/,$config{UDP6_IN})) {
+		if ($entry eq "") {next}
 		if ($entry =~ /^(\d+):(\d+)$/) {
 			my $from = $1;
 			my $to = $2;
-			for (my $port = $from; $port < $to ; $port++) {
+			for (my $port = $from; $port <= $to ; $port++) {
 				$ports{udp6}{$port} = 1;
 			}
 		} else {
