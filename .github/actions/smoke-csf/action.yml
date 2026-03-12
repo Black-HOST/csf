@@ -4,6 +4,8 @@ description: "Run smoke tests to verify core CSF functionality"
 runs:
   using: "composite"
   steps:
+    - uses: actions/checkout@v4
+    
     - name: Install smoke runner
       shell: bash
       run: install "${{ github.action_path }}/smoke" /usr/local/bin/smoke
