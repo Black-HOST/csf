@@ -1736,7 +1736,9 @@ sub dokill {
 				$hit = -1;
 			} else {
 				print "Removing rule...\n";
-				&linefilter($ipd, "deny", "", 1);
+				if (!$config{TESTING}) {
+					&linefilter($ipd, "deny", "", 1);
+				}
 				$hit = 1;
 				next;
 			}
@@ -1825,7 +1827,9 @@ sub doakill {
 		checkip(\$ipd);
 		if (uc $ipd eq uc $ip) {
 			print "Removing rule...\n";
-			&linefilter($ipd, "allow", "", 1);
+			if (!$config{TESTING}) {
+				&linefilter($ipd, "allow", "", 1);
+			}
 			$hit = 1;
 			next;
 		}
