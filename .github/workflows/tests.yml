@@ -37,6 +37,8 @@ jobs:
       image: ubuntu:24.04
       options: --privileged
     steps:
+      - uses: actions/checkout@v4
+
       - name: Setup CSF
         uses: ./.github/actions/setup-csf
 
@@ -50,6 +52,8 @@ jobs:
       image: ubuntu:24.04
       options: --privileged
     steps:
+      - uses: actions/checkout@v4
+
       - name: Setup CSF
         uses: ./.github/actions/setup-csf
 
