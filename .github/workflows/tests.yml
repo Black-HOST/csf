@@ -30,8 +30,21 @@ jobs:
       - uses: actions/checkout@v4
       - run: prove -v "$(find .github/tests -name '${{ matrix.test }}' -type f)"
 
+  install:
+    name: "Install"
+    runs-on: ubuntu-latest
+    container:
+      image: ubuntu:24.04
+      options: --privileged
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup CSF
+        uses: ./.github/actions/setup-csf
+
   smoke:
     name: "Smoke"
+    needs: install
     runs-on: ubuntu-latest
     container:
       image: ubuntu:24.04
@@ -47,6 +60,7 @@ jobs:
 
   uninstall:
     name: "Uninstall"
+    needs: install
     runs-on: ubuntu-latest
     container:
       image: ubuntu:24.04
