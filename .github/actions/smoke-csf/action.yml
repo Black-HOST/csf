@@ -5,10 +5,12 @@ runs:
   using: "composite"
   steps:
     - uses: actions/checkout@v4
-    
+
     - name: Install smoke runner
       shell: bash
-      run: install "${{ github.action_path }}/smoke" /usr/local/bin/smoke
+      run: |
+              SMOKE_EXE=$(readlink -f "${{ github.action_path }}/smoke")
+              install "$SMOKE_EXE" /usr/local/bin/smoke
 
     - name: "csf -v (version)"
       shell: bash
