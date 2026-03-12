@@ -9,27 +9,26 @@ permissions:
   contents: read
 
 jobs:
-  unit:
-    name: Unit
+  discover:
     runs-on: ubuntu-latest
-
+    outputs:
+      tests: ${{ steps.scan.outputs.tests }}
     steps:
-      - name: Check out repository
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
+      - id: scan
+        run: echo "tests=$(find .github/tests -name '*.t' -type f | sort | jq -R -s -c 'split("\n") | map(select(length > 0))')" >> "$GITHUB_OUTPUT"
 
-      - name: Show Perl toolchain
-        shell: bash
-        run: |
-          set -euo pipefail
-          perl -v
-          echo '---'
-          prove --version
-
-      - name: Run unit tests
-        shell: bash
-        run: |
-          set -euo pipefail
-          prove -v -r .github/tests/unit/
+  unit:
+    needs: discover
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        test: ${{ fromJson(needs.discover.outputs.tests) }}
+    name: "unit / ${{ matrix.test }}"
+    steps:
+      - uses: actions/checkout@v4
+      - run: prove -v "${{ matrix.test }}"
 
   uninstall:
     name: "Uninstall – ${{ matrix.os-name }}"
@@ -69,4 +68,3 @@ jobs:
           set -uo pipefail
           cd "$GITHUB_WORKSPACE"
           bash uninstall.sh
-
