@@ -16,7 +16,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - id: scan
-        run: echo "tests=$(find .github/tests -name '*.t' -type f | sort | jq -R -s -c 'split("\n") | map(select(length > 0))')" >> "$GITHUB_OUTPUT"
+        run: echo "tests=$(find .github/tests -name '*.t' -type f | sort | xargs -n1 basename | jq -R -s -c 'split("\n") | map(select(length > 0))')" >> "$GITHUB_OUTPUT"
 
   unit:
     needs: discover
@@ -25,10 +25,10 @@ jobs:
       fail-fast: false
       matrix:
         test: ${{ fromJson(needs.discover.outputs.tests) }}
-    name: "unit / ${{ matrix.test }}"
+    name: "${{ matrix.test }}"
     steps:
       - uses: actions/checkout@v4
-      - run: prove -v "${{ matrix.test }}"
+      - run: prove -v "$(find .github/tests -name '${{ matrix.test }}' -type f)"
 
   uninstall:
     name: "Uninstall – ${{ matrix.os-name }}"
