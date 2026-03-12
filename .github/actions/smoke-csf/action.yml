@@ -8,9 +8,7 @@ runs:
 
     - name: Install smoke runner
       shell: bash
-      run: |
-              SMOKE_EXE=$(readlink -f "${{ github.action_path }}/smoke")
-              install "$SMOKE_EXE" /usr/local/bin/smoke
+      run: install "$GITHUB_WORKSPACE/.github/actions/smoke-csf/smoke" /usr/local/bin/smoke
 
     - name: "csf -v (version)"
       shell: bash
