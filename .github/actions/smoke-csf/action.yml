@@ -1,0 +1,53 @@
+name: "Smoke CSF"
+description: "Run smoke tests to verify core CSF functionality"
+
+runs:
+  using: "composite"
+  steps:
+    - name: Install smoke runner
+      shell: bash
+      run: install "${{ github.action_path }}/smoke" /usr/local/bin/smoke
+
+    - name: "csf -v (version)"
+      shell: bash
+      run: smoke csf -v
+
+    - name: "csf -s (start firewall)"
+      shell: bash
+      run: smoke csf -s
+
+    - name: "csf -l (list iptables rules)"
+      shell: bash
+      run: smoke csf -l
+
+    - name: "csf -l6 (list ip6tables rules)"
+      shell: bash
+      run: smoke csf -l6
+
+    - name: "csf -a 1.2.3.4 CI_TEST (allow IP)"
+      shell: bash
+      run: smoke csf -a 1.2.3.4 "CI operational test"
+
+    - name: "csf -g 1.2.3.4 (grep rules for IP)"
+      shell: bash
+      run: smoke csf -g 1.2.3.4
+
+    - name: "csf -ar 1.2.3.4 (remove allowed IP)"
+      shell: bash
+      run: smoke csf -ar 1.2.3.4
+
+    - name: "csf -d 4.3.2.1 CI_TEST (deny IP)"
+      shell: bash
+      run: smoke csf -d 4.3.2.1 "CI operational test"
+
+    - name: "csf -dr 4.3.2.1 (remove denied IP)"
+      shell: bash
+      run: smoke csf -dr 4.3.2.1
+
+    - name: "csf -r (restart firewall)"
+      shell: bash
+      run: smoke csf -r
+
+    - name: "csf -f (flush/stop firewall)"
+      shell: bash
+      run: smoke csf -f

@@ -9,7 +9,7 @@ permissions:
   contents: read
 
 jobs:
-  discover:
+  unit:
     runs-on: ubuntu-latest
     outputs:
       tests: ${{ steps.scan.outputs.tests }}
@@ -18,49 +18,40 @@ jobs:
       - id: scan
         run: echo "tests=$(find .github/tests -name '*.t' -type f | sort | xargs -n1 basename | jq -R -s -c 'split("\n") | map(select(length > 0))')" >> "$GITHUB_OUTPUT"
 
-  unit:
-    needs: discover
+  tests:
+    needs: unit
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
       matrix:
-        test: ${{ fromJson(needs.discover.outputs.tests) }}
+        test: ${{ fromJson(needs.unit.outputs.tests) }}
     name: "${{ matrix.test }}"
     steps:
       - uses: actions/checkout@v4
       - run: prove -v "$(find .github/tests -name '${{ matrix.test }}' -type f)"
 
-  uninstall:
-    name: "Uninstall – ${{ matrix.os-name }}"
+  smoke:
+    name: "Smoke"
     runs-on: ubuntu-latest
-    strategy:
-      fail-fast: false
-      matrix:
-        include:
-          - os-name: "Ubuntu 24.04"
-            container: "ubuntu:24.04"
-            setup-cmd: >-
-              apt-get update && apt-get install -y
-              wget curl tar perl libwww-perl liblwp-protocol-https-perl libgd-graph-perl iptables host unzip sendmail
-
     container:
-      image: ${{ matrix.container }}
+      image: ubuntu:24.04
       options: --privileged
-
     steps:
-      - name: Install OS dependencies
-        if: ${{ matrix.setup-cmd }}
-        run: ${{ matrix.setup-cmd }}
+      - name: Setup CSF
+        uses: ./.github/actions/setup-csf
 
-      - name: Check out repository
-        uses: actions/checkout@v4
+      - name: Smoke CSF
+        uses: ./.github/actions/smoke-csf
 
-      - name: Install CSF from source
-        shell: bash
-        run: |
-          set -euo pipefail
-          cd "$GITHUB_WORKSPACE"
-          sh install.sh
+  uninstall:
+    name: "Uninstall"
+    runs-on: ubuntu-latest
+    container:
+      image: ubuntu:24.04
+      options: --privileged
+    steps:
+      - name: Setup CSF
+        uses: ./.github/actions/setup-csf
 
       - name: Run uninstaller
         shell: bash

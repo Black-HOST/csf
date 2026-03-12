@@ -1,0 +1,21 @@
+name: "Setup CSF"
+description: "Install OS dependencies, check out the repository, and install CSF from source"
+
+runs:
+  using: "composite"
+  steps:
+    - name: Install OS dependencies
+      shell: bash
+      run: >-
+        apt-get update && apt-get install -y
+        wget curl tar perl libwww-perl liblwp-protocol-https-perl libgd-graph-perl iptables host unzip sendmail
+
+    - name: Check out repository
+      uses: actions/checkout@v4
+
+    - name: Install CSF from source
+      shell: bash
+      run: |
+        set -euo pipefail
+        cd "$GITHUB_WORKSPACE"
+        sh install.sh
