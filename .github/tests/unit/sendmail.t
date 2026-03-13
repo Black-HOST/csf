@@ -11,19 +11,7 @@ use lib "$Bin/../lib";
 
 use TestBootstrap ();
 
-{
-    package Local::SendmailConfig;
 
-    sub new {
-        my ($class, $config) = @_;
-        return bless { config => $config }, $class;
-    }
-
-    sub config {
-        my ($self) = @_;
-        return %{ $self->{config} };
-    }
-}
 
 sub build_capture_sendmail {
     my ($dir) = @_;
@@ -55,19 +43,7 @@ EOF
     return $script;
 }
 
-sub load_sendmail_module {
-    my ($config) = @_;
 
-    require ConfigServer::Config;
-
-    no warnings qw(redefine once);
-    local *ConfigServer::Config::loadconfig = sub {
-        return Local::SendmailConfig->new($config);
-    };
-
-    require ConfigServer::Sendmail;
-    return 1;
-}
 
 sub capture_relay_output {
     my ($dir, @relay_args) = @_;
@@ -96,7 +72,7 @@ sub capture_relay_output {
 my $tempdir = tempdir(CLEANUP => 1);
 my $sendmail_script = build_capture_sendmail($tempdir);
 
-load_sendmail_module({
+TestBootstrap::reload_module_with_config('ConfigServer::Sendmail', {
     LF_ALERT_SMTP => 0,
     LF_ALERT_TO   => 'default-to@example.com',
     LF_ALERT_FROM => 'default-from@example.com',

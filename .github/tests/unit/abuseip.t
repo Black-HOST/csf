@@ -11,35 +11,6 @@ use lib "$Bin/../lib";
 
 use TestBootstrap ();
 
-{
-    package Local::AbuseIPConfig;
-
-    sub new {
-        my ($class, $config) = @_;
-        return bless { config => $config }, $class;
-    }
-
-    sub config {
-        my ($self) = @_;
-        return %{ $self->{config} };
-    }
-}
-
-sub reload_abuseip_module {
-    my ($config) = @_;
-
-    require ConfigServer::Config;
-
-    no warnings qw(redefine once);
-    local *ConfigServer::Config::loadconfig = sub {
-        return Local::AbuseIPConfig->new($config);
-    };
-
-    delete $INC{'ConfigServer/AbuseIP.pm'};
-    require ConfigServer::AbuseIP;
-    return 1;
-}
-
 sub build_fake_host_binary {
     my ($dir, %opts) = @_;
 
@@ -85,7 +56,7 @@ subtest 'abuseip resolves an IPv4 abuse contact and builds the human message' =>
         output => qq{$lookup has TXT record "abuse\@example.test"\n},
     );
 
-    reload_abuseip_module({ HOST => $host_bin });
+    TestBootstrap::reload_module_with_config('ConfigServer::AbuseIP',{ HOST => $host_bin });
     my ($contact, $message) = ConfigServer::AbuseIP::abuseip('192.0.2.10');
 
     is($contact, 'abuse@example.test', 'IPv4 lookup returns the TXT contact value');
@@ -106,7 +77,7 @@ subtest 'abuseip resolves an IPv6 abuse contact' => sub {
         output => qq{$lookup has TXT record "ipv6-contact\@example.test"\n},
     );
 
-    reload_abuseip_module({ HOST => $host_bin });
+    TestBootstrap::reload_module_with_config('ConfigServer::AbuseIP',{ HOST => $host_bin });
     my ($contact, $message) = ConfigServer::AbuseIP::abuseip('2001:db8::20');
 
     is($contact, 'ipv6-contact@example.test', 'IPv6 lookup returns the TXT contact value');
@@ -125,7 +96,7 @@ subtest 'abuseip returns nothing for invalid input and skips the host lookup ent
         output => qq{should not be used\n},
     );
 
-    reload_abuseip_module({ HOST => $host_bin });
+    TestBootstrap::reload_module_with_config('ConfigServer::AbuseIP',{ HOST => $host_bin });
     my $result = ConfigServer::AbuseIP::abuseip('not-an-ip');
 
     ok(!$result, 'invalid input returns a false value');
@@ -140,7 +111,7 @@ subtest 'abuseip returns nothing when the lookup output contains no quoted conta
         output => qq{$lookup lookup failed\n},
     );
 
-    reload_abuseip_module({ HOST => $host_bin });
+    TestBootstrap::reload_module_with_config('ConfigServer::AbuseIP',{ HOST => $host_bin });
     my $result = ConfigServer::AbuseIP::abuseip('192.0.2.10');
 
     ok(!$result, 'missing TXT contact produces a false value');

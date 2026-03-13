@@ -10,33 +10,9 @@ use lib "$Bin/../lib";
 use TestBootstrap ();
 use ConfigServer::Ports ();
 
-{
-    package Local::PortsConfig;
-
-    sub new {
-        my ($class, $config) = @_;
-        return bless { config => $config }, $class;
-    }
-
-    sub config {
-        my ($self) = @_;
-        return %{ $self->{config} };
-    }
-}
-
-sub with_mock_config {
-    my ($config, $code) = @_;
-
-    no warnings qw(redefine once);
-    local *ConfigServer::Config::loadconfig = sub {
-        return Local::PortsConfig->new($config);
-    };
-
-    return $code->();
-}
 
 subtest 'openports expands configured port lists across all protocol families' => sub {
-    my %ports = with_mock_config(
+    my %ports = TestBootstrap::with_mock_config(
         {
             TCP_IN  => '22,80,3000:3002',
             TCP6_IN => '443,8443:8444',
@@ -72,7 +48,7 @@ subtest 'openports expands configured port lists across all protocol families' =
 };
 
 subtest 'openports strips whitespace, skips empty entries, and de-duplicates overlaps' => sub {
-    my %ports = with_mock_config(
+    my %ports = TestBootstrap::with_mock_config(
         {
             TCP_IN  => ' 22 , , 80 , 80 , 1000:1002 , 1002 ',
             TCP6_IN => ' , 443 , , ',

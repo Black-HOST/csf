@@ -11,35 +11,6 @@ use lib "$Bin/../lib";
 
 use TestBootstrap ();
 
-{
-    package Local::GetIPsConfig;
-
-    sub new {
-        my ($class, $config) = @_;
-        return bless { config => $config }, $class;
-    }
-
-    sub config {
-        my ($self) = @_;
-        return %{ $self->{config} };
-    }
-}
-
-sub reload_getips_module {
-    my ($config) = @_;
-
-    require ConfigServer::Config;
-
-    no warnings qw(redefine once);
-    local *ConfigServer::Config::loadconfig = sub {
-        return Local::GetIPsConfig->new($config);
-    };
-
-    delete $INC{'ConfigServer/GetIPs.pm'};
-    require ConfigServer::GetIPs;
-    return 1;
-}
-
 sub build_fake_host_binary {
     my ($dir, %opts) = @_;
 
@@ -88,7 +59,7 @@ this line contains no address
 OUT
     );
 
-    reload_getips_module({ HOST => $host_bin });
+    TestBootstrap::reload_module_with_config('ConfigServer::GetIPs',{ HOST => $host_bin });
     my @ips = ConfigServer::GetIPs::getips('example.test');
 
     is_deeply(
@@ -114,14 +85,14 @@ example.test is unreachable
 OUT
     );
 
-    reload_getips_module({ HOST => $host_bin });
+    TestBootstrap::reload_module_with_config('ConfigServer::GetIPs',{ HOST => $host_bin });
     my @ips = ConfigServer::GetIPs::getips('example.test');
 
     is_deeply(\@ips, [], 'non-address output produces no results');
 };
 
 subtest 'getips falls back to local resolver logic when no host binary is available' => sub {
-    reload_getips_module({ HOST => '/definitely/missing/host-binary' });
+    TestBootstrap::reload_module_with_config('ConfigServer::GetIPs',{ HOST => '/definitely/missing/host-binary' });
     my @ips = ConfigServer::GetIPs::getips('localhost');
 
     ok(@ips >= 1, 'resolver fallback returns at least one address for localhost');

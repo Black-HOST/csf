@@ -11,19 +11,7 @@ use lib "$Bin/../lib";
 
 use TestBootstrap ();
 
-{
-    package Local::URLGetConfig;
 
-    sub new {
-        my ($class, $config) = @_;
-        return bless { config => $config }, $class;
-    }
-
-    sub config {
-        my ($self) = @_;
-        return %{ $self->{config} };
-    }
-}
 
 {
     package Local::URLGetLWPResponse;
@@ -54,23 +42,10 @@ use TestBootstrap ();
     }
 }
 
-sub reload_urlget_module {
-    my ($config) = @_;
 
-    require ConfigServer::Config;
-
-    no warnings qw(redefine once);
-    local *ConfigServer::Config::loadconfig = sub {
-        return Local::URLGetConfig->new($config);
-    };
-
-    delete $INC{'ConfigServer/URLGet.pm'};
-    require ConfigServer::URLGet;
-    return 1;
-}
 
 subtest 'urlget warns and returns nothing when no URL is provided' => sub {
-    reload_urlget_module({ CURL => '/nonexistent/curl', WGET => '/nonexistent/wget' });
+    TestBootstrap::reload_module_with_config('ConfigServer::URLGet',{ CURL => '/nonexistent/curl', WGET => '/nonexistent/wget' });
 
     my $client = ConfigServer::URLGet->new(1, 'agent-test', '');
     my @warnings;
@@ -84,7 +59,7 @@ subtest 'urlget warns and returns nothing when no URL is provided' => sub {
 };
 
 subtest 'urlget dispatches to the configured worker backend' => sub {
-    reload_urlget_module({ CURL => '/nonexistent/curl', WGET => '/nonexistent/wget' });
+    TestBootstrap::reload_module_with_config('ConfigServer::URLGet',{ CURL => '/nonexistent/curl', WGET => '/nonexistent/wget' });
 
     no warnings qw(redefine once);
 
@@ -108,7 +83,7 @@ subtest 'urlget dispatches to the configured worker backend' => sub {
 };
 
 subtest 'urlgetTINY uses the configured agent and proxy and returns inline content on success' => sub {
-    reload_urlget_module({ CURL => '/nonexistent/curl', WGET => '/nonexistent/wget' });
+    TestBootstrap::reload_module_with_config('ConfigServer::URLGet',{ CURL => '/nonexistent/curl', WGET => '/nonexistent/wget' });
 
     my %new_args;
     no warnings qw(redefine once);
@@ -138,7 +113,7 @@ subtest 'urlgetTINY uses the configured agent and proxy and returns inline conte
 };
 
 subtest 'urlgetTINY streams file downloads into a temporary file before renaming' => sub {
-    reload_urlget_module({ CURL => '/nonexistent/curl', WGET => '/nonexistent/wget' });
+    TestBootstrap::reload_module_with_config('ConfigServer::URLGet',{ CURL => '/nonexistent/curl', WGET => '/nonexistent/wget' });
 
     my $dir = tempdir(CLEANUP => 1);
     my $target = File::Spec->catfile($dir, 'download.bin');
@@ -177,7 +152,7 @@ subtest 'urlgetTINY streams file downloads into a temporary file before renaming
 };
 
 subtest 'urlgetTINY falls back to binget when the HTTP backend returns an error' => sub {
-    reload_urlget_module({ CURL => '/nonexistent/curl', WGET => '/nonexistent/wget' });
+    TestBootstrap::reload_module_with_config('ConfigServer::URLGet',{ CURL => '/nonexistent/curl', WGET => '/nonexistent/wget' });
 
     my @fallback_args;
     no warnings qw(redefine once);
@@ -211,7 +186,7 @@ subtest 'urlgetTINY falls back to binget when the HTTP backend returns an error'
 };
 
 subtest 'binget reports a clear error when no download helpers are configured' => sub {
-    reload_urlget_module({ CURL => '/definitely/missing/curl', WGET => '/definitely/missing/wget' });
+    TestBootstrap::reload_module_with_config('ConfigServer::URLGet',{ CURL => '/definitely/missing/curl', WGET => '/definitely/missing/wget' });
 
     my $client = ConfigServer::URLGet->new(1, 'NoHelpers/1.0', '');
     my ($status, $text) = ConfigServer::URLGet::binget('https://example.test/file', undef, 1, 'initial failure');
@@ -235,7 +210,7 @@ subtest 'binget reports a clear error when no download helpers are configured' =
 };
 
 subtest 'urlgetLWP can be exercised without network access when LWP is available' => sub {
-    reload_urlget_module({ CURL => '/nonexistent/curl', WGET => '/nonexistent/wget' });
+    TestBootstrap::reload_module_with_config('ConfigServer::URLGet',{ CURL => '/nonexistent/curl', WGET => '/nonexistent/wget' });
 
     SKIP: {
         skip 'LWP::UserAgent is not available in this environment', 7

@@ -12,19 +12,7 @@ use lib "$Bin/../lib";
 use TestBootstrap ();
 require ConfigServer::Sanity;
 
-{
-    package Local::SanityConfig;
 
-    sub new {
-        my ($class, $config) = @_;
-        return bless { config => $config }, $class;
-    }
-
-    sub config {
-        my ($self) = @_;
-        return %{ $self->{config} };
-    }
-}
 
 sub write_test_sanity_file {
     my $dir = tempdir(CLEANUP => 1);
@@ -49,16 +37,7 @@ sub reset_sanity_state {
     return;
 }
 
-sub with_mock_config {
-    my ($config, $code) = @_;
 
-    no warnings qw(redefine once);
-    local *ConfigServer::Config::loadconfig = sub {
-        return Local::SanityConfig->new($config);
-    };
-
-    return $code->();
-}
 
 subtest 'sanity data is loaded lazily on first use' => sub {
     my (undef, $path) = write_test_sanity_file();
@@ -66,7 +45,7 @@ subtest 'sanity data is loaded lazily on first use' => sub {
     reset_sanity_state();
     local $ConfigServer::Sanity::sanityfile = $path;
 
-    with_mock_config({ IPSET => 0 }, sub {
+    TestBootstrap::with_mock_config({ IPSET => 0 }, sub {
         is($ConfigServer::Sanity::loaded, 0, 'sanity rules are not loaded at import time');
         is(scalar keys %ConfigServer::Sanity::sanity, 0, 'sanity hash is empty before first call');
         is(scalar keys %ConfigServer::Sanity::sanitydefault, 0, 'default hash is empty before first call');
@@ -86,7 +65,7 @@ subtest 'range, discrete, and mixed rules are validated correctly' => sub {
     reset_sanity_state();
     local $ConfigServer::Sanity::sanityfile = $path;
 
-    with_mock_config({ IPSET => 0 }, sub {
+    TestBootstrap::with_mock_config({ IPSET => 0 }, sub {
         my ($insane, $range, $default);
 
         ($insane, $range, $default) = ConfigServer::Sanity::sanity('AT_INTERVAL', '10');
@@ -124,7 +103,7 @@ subtest 'undef values return early without loading sanity rules' => sub {
     reset_sanity_state();
     local $ConfigServer::Sanity::sanityfile = $path;
 
-    with_mock_config({ IPSET => 0 }, sub {
+    TestBootstrap::with_mock_config({ IPSET => 0 }, sub {
         my @result = ConfigServer::Sanity::sanity('AT_INTERVAL', undef);
 
         is_deeply(\@result, [0], 'undef values return the early 0 result');
@@ -139,7 +118,7 @@ subtest 'display formatting does not mutate cached rules' => sub {
     reset_sanity_state();
     local $ConfigServer::Sanity::sanityfile = $path;
 
-    with_mock_config({ IPSET => 0 }, sub {
+    TestBootstrap::with_mock_config({ IPSET => 0 }, sub {
         my ($insane, $range, $default) = ConfigServer::Sanity::sanity('DROP', 'TARPIT');
         is($insane, 0, 'first lookup validates an allowed token');
         is($range, 'DROP or TARPIT or REJECT', 'display output is formatted for humans');
@@ -169,7 +148,7 @@ EOF
 
     reset_sanity_state();
 
-    with_mock_config({ IPSET => 0 }, sub {
+    TestBootstrap::with_mock_config({ IPSET => 0 }, sub {
         local $ConfigServer::Sanity::sanityfile = $first_path;
         my ($insane, $range, $default) = ConfigServer::Sanity::sanity('AT_INTERVAL', '60');
 
@@ -192,7 +171,7 @@ subtest 'whitespace is ignored and unknown keys stay non-fatal' => sub {
     reset_sanity_state();
     local $ConfigServer::Sanity::sanityfile = $path;
 
-    with_mock_config({ IPSET => 0 }, sub {
+    TestBootstrap::with_mock_config({ IPSET => 0 }, sub {
         my ($insane, $range, $default) = ConfigServer::Sanity::sanity(' DROP ', ' TARPIT ');
         is($insane, 0, 'leading and trailing whitespace is ignored');
         is($range, 'DROP or TARPIT or REJECT', 'whitespace does not change the displayed rule');
@@ -211,7 +190,7 @@ subtest 'DENY_IP_LIMIT is skipped when IPSET is enabled' => sub {
     reset_sanity_state();
     local $ConfigServer::Sanity::sanityfile = $path;
 
-    with_mock_config({ IPSET => 1 }, sub {
+    TestBootstrap::with_mock_config({ IPSET => 1 }, sub {
         my ($insane, $range, $default) = ConfigServer::Sanity::sanity('DENY_IP_LIMIT', '5');
 
         is($insane, 0, 'DENY_IP_LIMIT is not validated when IPSET is enabled');
@@ -227,7 +206,7 @@ subtest 'missing sanity file fails with a clear error' => sub {
     reset_sanity_state();
     local $ConfigServer::Sanity::sanityfile = $path;
 
-    with_mock_config({ IPSET => 0 }, sub {
+    TestBootstrap::with_mock_config({ IPSET => 0 }, sub {
         my $ok = eval { ConfigServer::Sanity::sanity('AT_INTERVAL', '60'); 1 };
         ok(!$ok, 'sanity() dies when the sanity file is missing');
         like($@, qr/^Cannot open \Q$path\E:/, 'error message includes the missing file path');

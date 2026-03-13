@@ -13,33 +13,9 @@ use lib "$Bin/../lib";
 
 use TestBootstrap ();
 
-{
-    package Local::KillSSHConfig;
 
-    sub new {
-        my ($class, $config) = @_;
-        return bless { config => $config }, $class;
-    }
 
-    sub config {
-        my ($self) = @_;
-        return %{ $self->{config} };
-    }
-}
 
-sub reload_killssh_module {
-    require ConfigServer::Config;
-
-    no warnings qw(redefine once);
-    local *ConfigServer::Config::loadconfig = sub {
-        return Local::KillSSHConfig->new({ SYSLOG => 0 });
-    };
-
-    delete $INC{'ConfigServer/Logger.pm'};
-    delete $INC{'ConfigServer/KillSSH.pm'};
-    require ConfigServer::KillSSH;
-    return 1;
-}
 
 sub write_text_file {
     my ($path, $content) = @_;
@@ -120,7 +96,10 @@ sub with_mock_proc_root {
 }
 
 subtest 'hex2ip decodes proc-style IPv4 and IPv6 socket addresses' => sub {
-    reload_killssh_module();
+    TestBootstrap::reload_module_with_config(
+        'ConfigServer::KillSSH', { SYSLOG => 0 },
+        also_delete => ['ConfigServer::Logger'],
+    );
 
     is(
         ConfigServer::KillSSH::hex2ip('0100007F'),
@@ -136,7 +115,10 @@ subtest 'hex2ip decodes proc-style IPv4 and IPv6 socket addresses' => sub {
 };
 
 subtest 'find returns immediately when the target IP or ports list is empty' => sub {
-    reload_killssh_module();
+    TestBootstrap::reload_module_with_config(
+        'ConfigServer::KillSSH', { SYSLOG => 0 },
+        also_delete => ['ConfigServer::Logger'],
+    );
 
     my @killed;
     my @logs;
@@ -184,7 +166,10 @@ EOF
             },
         ],
         code => sub {
-            reload_killssh_module();
+            TestBootstrap::reload_module_with_config(
+                'ConfigServer::KillSSH', { SYSLOG => 0 },
+                also_delete => ['ConfigServer::Logger'],
+            );
             local *ConfigServer::Logger::logfile = sub { push @logs, @_ };
 
             is(
@@ -225,7 +210,10 @@ EOF
             },
         ],
         code => sub {
-            reload_killssh_module();
+            TestBootstrap::reload_module_with_config(
+                'ConfigServer::KillSSH', { SYSLOG => 0 },
+                also_delete => ['ConfigServer::Logger'],
+            );
             local *ConfigServer::Logger::logfile = sub { push @logs, @_ };
             ConfigServer::KillSSH::find('203.0.113.10', '22');
         },

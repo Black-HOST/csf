@@ -11,35 +11,6 @@ use lib "$Bin/../lib";
 
 use TestBootstrap ();
 
-{
-    package Local::RBLLookupConfig;
-
-    sub new {
-        my ($class, $config) = @_;
-        return bless { config => $config }, $class;
-    }
-
-    sub config {
-        my ($self) = @_;
-        return %{ $self->{config} };
-    }
-}
-
-sub reload_rbllookup_module {
-    my ($config) = @_;
-
-    require ConfigServer::Config;
-
-    no warnings qw(redefine once);
-    local *ConfigServer::Config::loadconfig = sub {
-        return Local::RBLLookupConfig->new($config);
-    };
-
-    delete $INC{'ConfigServer/RBLLookup.pm'};
-    require ConfigServer::RBLLookup;
-    return 1;
-}
-
 sub build_fake_host_binary {
     my ($dir, %opts) = @_;
 
@@ -108,7 +79,7 @@ subtest 'rbllookup resolves an IPv4 RBL hit and collects TXT details' => sub {
         txt_output => qq{$lookup has TXT record "Listed for spam"\n$lookup has TXT record "See https://example.test/rbl"\n},
     );
 
-    reload_rbllookup_module({ HOST => $host_bin });
+    TestBootstrap::reload_module_with_config('ConfigServer::RBLLookup',{ HOST => $host_bin });
     my ($hit, $text) = ConfigServer::RBLLookup::rbllookup('192.0.2.10', 'zen.example.test');
 
     is($hit, '127.0.0.2', 'IPv4 lookup returns the matched RBL address');
@@ -129,7 +100,7 @@ subtest 'rbllookup resolves an IPv6 RBL hit' => sub {
         txt_output => qq{$lookup has TXT record "IPv6 source listed"\n},
     );
 
-    reload_rbllookup_module({ HOST => $host_bin });
+    TestBootstrap::reload_module_with_config('ConfigServer::RBLLookup',{ HOST => $host_bin });
     my ($hit, $text) = ConfigServer::RBLLookup::rbllookup('2001:db8::20', 'dnsbl.example.test');
 
     is($hit, '127.0.0.4', 'IPv6 lookup returns the matched RBL address');
@@ -149,7 +120,7 @@ subtest 'rbllookup returns a false result when no RBL hit is found' => sub {
         a_output => qq{Host $lookup not found: 3(NXDOMAIN)\n},
     );
 
-    reload_rbllookup_module({ HOST => $host_bin });
+    TestBootstrap::reload_module_with_config('ConfigServer::RBLLookup',{ HOST => $host_bin });
     my ($hit, $text) = ConfigServer::RBLLookup::rbllookup('192.0.2.10', 'zen.example.test');
 
     ok(!defined $hit || $hit eq '', 'no RBL hit returns a false hit value');
@@ -165,7 +136,7 @@ subtest 'rbllookup returns a false result for invalid input without invoking hos
     my $dir = tempdir(CLEANUP => 1);
     my ($host_bin, $args_log) = build_fake_host_binary($dir);
 
-    reload_rbllookup_module({ HOST => $host_bin });
+    TestBootstrap::reload_module_with_config('ConfigServer::RBLLookup',{ HOST => $host_bin });
     my ($hit, $text) = ConfigServer::RBLLookup::rbllookup('not-an-ip', 'zen.example.test');
 
     ok(!defined $hit || $hit eq '', 'invalid input returns a false hit value');
@@ -181,7 +152,7 @@ subtest 'rbllookup reports timeout when the A lookup exceeds the alarm window' =
         timeout_a => 1,
     );
 
-    reload_rbllookup_module({ HOST => $host_bin });
+    TestBootstrap::reload_module_with_config('ConfigServer::RBLLookup',{ HOST => $host_bin });
     my ($hit, $text) = ConfigServer::RBLLookup::rbllookup('192.0.2.10', 'timeout.example.test');
 
     is($hit, 'timeout', 'slow host lookups are converted into the timeout sentinel');
