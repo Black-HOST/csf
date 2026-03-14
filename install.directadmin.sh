@@ -356,13 +356,13 @@ chcon -h system_u:object_r:bin_t:s0 /usr/sbin/csf
 
 mkdir panels/webmin/csf/images
 mkdir ui/images
-mkdir da/images
+mkdir panels/da/images
 mkdir panels/interworx/images
 
-cp -avf csf/* webmin/csf/images/
+cp -avf csf/* panels/webmin/csf/images/
 cp -avf csf/* ui/images/
-cp -avf csf/* da/images/
-cp -avf csf/* interworx/images/
+cp -avf csf/* panels/da/images/
+cp -avf csf/* panels/interworx/images/
 
 cp -avf messenger/*.php /etc/csf/messenger/
 cp -avf uninstall.sh /usr/local/csf/bin/
@@ -425,7 +425,7 @@ chmod -v 700 auto.directadmin.pl
 mkdir -p /usr/local/directadmin/plugins/csf/
 chmod 711 /usr/local/directadmin/plugins/csf
 chown diradmin:diradmin /usr/local/directadmin/plugins/csf
-cp -avf da/* /usr/local/directadmin/plugins/csf/
+cp -avf panels/da/* /usr/local/directadmin/plugins/csf/
 cp -avf csf/* /usr/local/directadmin/plugins/csf/images/
 find /usr/local/directadmin/plugins/csf/ -type d -exec chmod -v 755 {} \;
 find /usr/local/directadmin/plugins/csf/ -type f -exec chmod -v 644 {} \;

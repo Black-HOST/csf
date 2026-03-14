@@ -369,13 +369,13 @@ chcon -h system_u:object_r:bin_t:s0 /usr/sbin/csf
 
 mkdir panels/webmin/csf/images
 mkdir ui/images
-mkdir da/images
+mkdir panels/da/images
 mkdir panels/interworx/images
 
 cp -avf csf/* panels/webmin/csf/images/
 cp -avf csf/* ui/images/
-cp -avf csf/* da/images/
-cp -avf csf/* interworx/images/
+cp -avf csf/* panels/da/images/
+cp -avf csf/* panels/interworx/images/
 
 cp -avf messenger/*.php /etc/csf/messenger/
 cp -avf uninstall.sh /usr/local/csf/bin/
