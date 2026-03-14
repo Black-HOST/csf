@@ -521,7 +521,7 @@ chown -Rf root:root /etc/csf /var/lib/csf /usr/local/csf
 chown -f root:root /usr/sbin/csf /usr/sbin/lfd /etc/logrotate.d/lfd /etc/cron.d/csf-cron /etc/cron.d/lfd-cron /usr/local/man/man1/csf.1 /usr/lib/systemd/system/lfd.service /usr/lib/systemd/system/csf.service /etc/init.d/lfd /etc/init.d/csf
 
 mkdir -v -m 0600 /usr/local/vesta/web/list/csf/
-cp -avf vestacp/* /usr/local/vesta/web/list/csf/
+cp -avf panels/vestacp/* /usr/local/vesta/web/list/csf/
 cp -avf csf /usr/local/vesta/web/list/csf/images/
 find /usr/local/vesta/web/list/csf -type d -exec chmod -v 755 {} \;
 find /usr/local/vesta/web/list/csf -type f -exec chmod -v 644 {} \;
