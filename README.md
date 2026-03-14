@@ -5,7 +5,6 @@
 [![Release](https://img.shields.io/github/v/tag/Black-HOST/csf?logo=GitHub&label=Release&color=ba5225&style=for-the-badge)](https://github.com/Black-HOST/csf/releases)
 [![Downloads](https://img.shields.io/github/downloads/Black-HOST/csf/total?logo=github&logoColor=FFFFFF&label=Downloads&color=376892&style=for-the-badge)](https://github.com/Black-HOST/csf/releases)
 [![License: GPL v3](https://img.shields.io/badge/License-GPLv3-blue.svg?style=for-the-badge)](#license)
-[![Contributors](https://img.shields.io/github/contributors/Black-HOST/csf?style=for-the-badge)](https://github.com/Black-HOST/csf/graphs/contributors)
 
 > [!NOTE]
 > **This is a community-maintained fork of CSF.**
