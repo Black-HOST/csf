@@ -414,7 +414,7 @@ fi
 
 #if [ -e "/usr/local/cwpsrv/" ]; then
 #    if [ ! -e "/etc/csf/cwp.disable" ]; then
-#        cp -avf cwp /usr/local/csf/lib/
+#        cp -avf panels/cwp /usr/local/csf/lib/
 ##        chattr -i /usr/local/cwpsrv/htdocs/admin/
 ##        ln -svf /usr/local/csf/lib/cwp/ /usr/local/cwpsrv/htdocs/admin/csf
 ##        chattr +i /usr/local/cwpsrv/htdocs/admin/
@@ -540,11 +540,11 @@ fi
 chown -Rf root:root /etc/csf /var/lib/csf /usr/local/csf
 chown -f root:root /usr/sbin/csf /usr/sbin/lfd /etc/logrotate.d/lfd /etc/cron.d/csf-cron /etc/cron.d/lfd-cron /usr/local/man/man1/csf.1 /usr/lib/systemd/system/lfd.service /usr/lib/systemd/system/csf.service /etc/init.d/lfd /etc/init.d/csf
 
-cp -av cwp/csfofficial.php /usr/local/cwpsrv/htdocs/resources/admin/modules/
-cp -av cwp/csf.pl /usr/local/cwpsrv/htdocs/resources/admin/modules/
+cp -av panels/cwp/csfofficial.php /usr/local/cwpsrv/htdocs/resources/admin/modules/
+cp -av panels/cwp/csf.pl /usr/local/cwpsrv/htdocs/resources/admin/modules/
 chmod 700 /usr/local/cwpsrv/htdocs/resources/admin/modules/csf.pl
-cp -av cwp/ajax_csfframe.php /usr/local/cwpsrv/htdocs/resources/admin/addons/ajax/
-cp -av cwp/configserver.php /usr/local/cwpsrv/htdocs/resources/admin/include/
+cp -av panels/cwp/ajax_csfframe.php /usr/local/cwpsrv/htdocs/resources/admin/addons/ajax/
+cp -av panels/cwp/configserver.php /usr/local/cwpsrv/htdocs/resources/admin/include/
 mkdir -v -m 0600 /usr/local/cwpsrv/htdocs/admin/design/csf/
 cp -avf csf/* /usr/local/cwpsrv/htdocs/admin/design/csf/
 
