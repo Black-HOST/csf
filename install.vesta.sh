@@ -367,12 +367,12 @@ fi
 chcon -h system_u:object_r:bin_t:s0 /usr/sbin/lfd
 chcon -h system_u:object_r:bin_t:s0 /usr/sbin/csf
 
-mkdir webmin/csf/images
+mkdir panels/webmin/csf/images
 mkdir ui/images
 mkdir da/images
 mkdir interworx/images
 
-cp -avf csf/* webmin/csf/images/
+cp -avf csf/* panels/webmin/csf/images/
 cp -avf csf/* ui/images/
 cp -avf csf/* da/images/
 cp -avf csf/* interworx/images/
@@ -390,7 +390,7 @@ cp -avf downloadservers /etc/csf/
 cp -avf install.txt /etc/csf/
 cp -avf version.txt /etc/csf/
 cp -avf license.txt /etc/csf/
-cp -avf webmin /usr/local/csf/lib/
+cp -avf panels/webmin /usr/local/csf/lib/
 cp -avf ConfigServer /usr/local/csf/lib/
 cp -avf Net /usr/local/csf/lib/
 cp -avf Geo /usr/local/csf/lib/
@@ -528,7 +528,7 @@ find /usr/local/vesta/web/list/csf -type f -exec chmod -v 644 {} \;
 mv /usr/local/vesta/web/list/csf/csf.pl /usr/local/vesta/bin/
 chmod 700 /usr/local/vesta/bin/csf.pl
 
-cd webmin ; tar -czf /usr/local/csf/csfwebmin.tgz ./*
+cd panels/webmin ; tar -czf /usr/local/csf/csfwebmin.tgz ./*
 ln -svf /usr/local/csf/csfwebmin.tgz /etc/csf/
 
 echo

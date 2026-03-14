@@ -354,7 +354,7 @@ fi
 chcon -h system_u:object_r:bin_t:s0 /usr/sbin/lfd
 chcon -h system_u:object_r:bin_t:s0 /usr/sbin/csf
 
-mkdir webmin/csf/images
+mkdir panels/webmin/csf/images
 mkdir ui/images
 mkdir da/images
 mkdir interworx/images
@@ -377,7 +377,7 @@ cp -avf downloadservers /etc/csf/
 cp -avf install.txt /etc/csf/
 cp -avf version.txt /etc/csf/
 cp -avf license.txt /etc/csf/
-cp -avf webmin /usr/local/csf/lib/
+cp -avf panels/webmin /usr/local/csf/lib/
 cp -avf ConfigServer /usr/local/csf/lib/
 cp -avf Net /usr/local/csf/lib/
 cp -avf Geo /usr/local/csf/lib/
@@ -526,7 +526,7 @@ fi
 chown -Rf root:root /etc/csf /var/lib/csf /usr/local/csf
 chown -f root:root /usr/sbin/csf /usr/sbin/lfd /etc/logrotate.d/lfd /etc/cron.d/csf-cron /etc/cron.d/lfd-cron /usr/local/man/man1/csf.1 /usr/lib/systemd/system/lfd.service /usr/lib/systemd/system/csf.service /etc/init.d/lfd /etc/init.d/csf
 
-cd webmin ; tar -czf /usr/local/csf/csfwebmin.tgz ./*
+cd panels/webmin ; tar -czf /usr/local/csf/csfwebmin.tgz ./*
 ln -svf /usr/local/csf/csfwebmin.tgz /etc/csf/
 
 echo
