@@ -1,10 +1,12 @@
 # ConfigServer Security & Firewall (CSF)
 
-[![Build](https://img.shields.io/github/actions/workflow/status/Black-HOST/csf/release.yml?branch=main&style=for-the-badge)](https://github.com/Black-HOST/csf/actions/workflows/release.yml)
-[![Tests](https://img.shields.io/github/actions/workflow/status/Black-HOST/csf/tests.yml?branch=main&style=for-the-badge&label=Tests)](https://github.com/Black-HOST/csf/actions/workflows/tests.yml)
-[![Release](https://img.shields.io/github/v/tag/Black-HOST/csf?logo=GitHub&label=Release&color=ba5225&style=for-the-badge)](https://github.com/Black-HOST/csf/releases)
-[![Downloads](https://img.shields.io/github/downloads/Black-HOST/csf/total?logo=github&logoColor=FFFFFF&label=Downloads&color=376892&style=for-the-badge)](https://github.com/Black-HOST/csf/releases)
-[![License: GPL v3](https://img.shields.io/badge/License-GPLv3-blue.svg?style=for-the-badge)](#license)
+<p align="center">
+  <a href="https://github.com/Black-HOST/csf/actions/workflows/release.yml"><img src="https://img.shields.io/github/actions/workflow/status/Black-HOST/csf/release.yml?branch=main&style=for-the-badge" alt="Build"></a>
+  <a href="https://github.com/Black-HOST/csf/actions/workflows/tests.yml"><img src="https://img.shields.io/github/actions/workflow/status/Black-HOST/csf/tests.yml?branch=main&style=for-the-badge&label=Tests" alt="Tests"></a>
+  <a href="https://github.com/Black-HOST/csf/releases"><img src="https://img.shields.io/github/v/tag/Black-HOST/csf?logo=GitHub&label=Release&color=ba5225&style=for-the-badge" alt="Release"></a>
+  <a href="https://github.com/Black-HOST/csf/releases"><img src="https://img.shields.io/github/downloads/Black-HOST/csf/total?logo=github&logoColor=FFFFFF&label=Downloads&color=376892&style=for-the-badge" alt="Downloads"></a>
+  <a href="#license"><img src="https://img.shields.io/badge/License-GPLv3-blue.svg?style=for-the-badge" alt="License: GPL v3"></a>
+</p>
 
 > [!NOTE]
 > **This is a community-maintained fork of CSF.**
@@ -25,14 +27,12 @@ CSF is a Stateful Packet Inspection (SPI) firewall, Login/Intrusion Detection an
 You can install CSF quickly using one of the following one-liners:
 
 ```bash
-# Using wget
 bash <(wget -qO - https://csf.black.host)
 ```
 
 or
 
 ```bash
-# Using wget
 bash <(curl -sL https://csf.black.host)
 ```
 
