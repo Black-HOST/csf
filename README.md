@@ -1,11 +1,10 @@
 # ConfigServer Security & Firewall (CSF)
 
-[![License: GPL v3](https://img.shields.io/badge/License-GPLv3-blue.svg)](#license)
-[![Version](https://img.shields.io/github/v/tag/Black-HOST/csf?logo=GitHub&label=Version&color=ba5225)](https://github.com/Black-HOST/csf/releases)
-[![Downloads](https://img.shields.io/github/downloads/Black-HOST/csf/total?logo=github&logoColor=FFFFFF&label=Downloads&color=376892)](https://github.com/Black-HOST/csf/releases)
-[![Size](https://img.shields.io/github/repo-size/Black-HOST/csf?logo=github&label=Size&color=59702a)](https://github.com/Black-HOST/csf)
-[![Last Commit](https://img.shields.io/github/last-commit/Black-HOST/csf?logo=github&logoColor=FFFFFF&label=Last%20Commit&color=313131)](https://github.com/Black-HOST/csf/activity)
-[![Contributors](https://img.shields.io/github/contributors/Black-HOST/csf)](https://github.com/Black-HOST/csf/graphs/contributors)
+[![Build](https://img.shields.io/github/actions/workflow/status/Black-HOST/csf/release.yml?branch=main&style=for-the-badge)](https://github.com/Black-HOST/csf/actions/workflows/release.yml)
+[![Tests](https://img.shields.io/github/actions/workflow/status/Black-HOST/csf/tests.yml?branch=main&style=for-the-badge&label=Tests)](https://github.com/Black-HOST/csf/actions/workflows/tests.yml)
+[![Release](https://img.shields.io/github/v/tag/Black-HOST/csf?logo=GitHub&label=Release&color=ba5225&style=for-the-badge)](https://github.com/Black-HOST/csf/releases)
+[![Downloads](https://img.shields.io/github/downloads/Black-HOST/csf/total?logo=github&logoColor=FFFFFF&label=Downloads&color=376892&style=for-the-badge)](https://github.com/Black-HOST/csf/releases)
+[![License: GPL v3](https://img.shields.io/badge/License-GPLv3-blue.svg?style=for-the-badge)](#license)
 
 > [!NOTE]
 > **This is a community-maintained fork of CSF.**
