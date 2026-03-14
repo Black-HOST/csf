@@ -370,7 +370,7 @@ chcon -h system_u:object_r:bin_t:s0 /usr/sbin/csf
 mkdir panels/webmin/csf/images
 mkdir ui/images
 mkdir da/images
-mkdir interworx/images
+mkdir panels/interworx/images
 
 cp -avf csf/* webmin/csf/images/
 cp -avf csf/* ui/images/
@@ -523,7 +523,7 @@ chown -f root:root /usr/sbin/csf /usr/sbin/lfd /etc/logrotate.d/lfd /etc/cron.d/
 
 mkdir -v -m 0600 /usr/local/interworx/plugins/configservercsf /usr/local/interworx/html/configserver
 chmod -v 0711 /usr/local/interworx/html/configserver
-cp -avf interworx/* /usr/local/interworx/plugins/configservercsf
+cp -avf panels/interworx/* /usr/local/interworx/plugins/configservercsf
 cp -avf csf /usr/local/interworx/html/configserver/
 chown -R iworx:iworx /usr/local/interworx/plugins/configservercsf /usr/local/interworx/html/configserver
 find /usr/local/interworx/plugins/configservercsf -type d -exec chmod -v 700 {} \;

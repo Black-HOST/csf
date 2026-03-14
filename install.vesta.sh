@@ -370,7 +370,7 @@ chcon -h system_u:object_r:bin_t:s0 /usr/sbin/csf
 mkdir panels/webmin/csf/images
 mkdir ui/images
 mkdir da/images
-mkdir interworx/images
+mkdir panels/interworx/images
 
 cp -avf csf/* panels/webmin/csf/images/
 cp -avf csf/* ui/images/
