@@ -519,12 +519,12 @@ chown -f root:root /usr/sbin/csf /usr/sbin/lfd /etc/logrotate.d/lfd /etc/cron.d/
 
 mkdir -vp /usr/local/CyberCP/public/static/configservercsf/
 cp -avf csf/* /usr/local/CyberCP/public/static/configservercsf/
-cp -avf csf/* cyberpanel/configservercsf/static/configservercsf/
+cp -avf csf/* panels/cyberpanel/configservercsf/static/configservercsf/
 chmod 755 /usr/local/CyberCP/public/static/configservercsf/
 
-cp cyberpanel/cyberpanel.pl /usr/local/csf/bin/
+cp panels/cyberpanel/cyberpanel.pl /usr/local/csf/bin/
 chmod 700 /usr/local/csf/bin/cyberpanel.pl
-cp -avf cyberpanel/configservercsf /usr/local/CyberCP/
+cp -avf panels/cyberpanel/configservercsf /usr/local/CyberCP/
 
 mkdir /home/cyberpanel/plugins
 touch /home/cyberpanel/plugins/configservercsf
