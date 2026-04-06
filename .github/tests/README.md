@@ -2,6 +2,9 @@
 
 This directory contains the repository-owned test suite used by the `Tests` GitHub Actions workflow.
 
+Notes:
+- `unit/csf.t` and `unit/csf_uninitialized_warnings.t` use a dedicated `lib/MockConfig.pm` helper because `csf.pl` is a modulino-style CLI script with heavy `ConfigServer::Config` coupling, and these tests need tighter config mocking than the lighter shared `TestBootstrap` helper currently provides.
+
 The goal is to keep the test system simple, portable, and friendly to contributors:
 
 - use standard Perl tooling (`prove`, `Test::More`) where possible

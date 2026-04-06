@@ -28,6 +28,16 @@ jobs:
     name: "${{ matrix.test }}"
     steps:
       - uses: actions/checkout@v4
+      - name: Install Perl deps for csf.t
+        if: matrix.test == 'csf.t'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libtest-mockmodule-perl libtest-mockfile-perl
+      - name: Install Perl deps for csf_uninitialized_warnings.t
+        if: matrix.test == 'csf_uninitialized_warnings.t'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libtest-mockmodule-perl
       - run: prove -v "$(find .github/tests -name '${{ matrix.test }}' -type f)"
 
   install:
