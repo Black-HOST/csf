@@ -32,8 +32,8 @@ my $panel = $ARGV[1] || "generic";
 if ($panel !~ /^[a-z]+$/) {
 	die "Error: Invalid panel name [$panel]\n";
 }
-if (! -d "conf/$panel") {
-	die "Error: No configuration directory found for panel [$panel] in conf/\n";
+if (! -d "etc/conf/$panel") {
+	die "Error: No configuration directory found for panel [$panel] in etc/conf/\n";
 }
 
 open (VERSION, "<","/etc/csf/version.txt");
@@ -498,7 +498,7 @@ if ($panel eq "directadmin" and &checkversion("14.03") and !-e "/var/lib/csf/aut
 	if ($roundcube < 1.4) {$roundcube = 0} else {$roundcube = 1}
 }
 
-open (IN, "<", "conf/$panel/csf.conf") or die $!;
+open (IN, "<", "etc/conf/$panel/csf.conf") or die $!;
 flock (IN, LOCK_SH) or die $!;
 my @config = <IN>;
 close (IN);

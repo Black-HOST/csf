@@ -31,9 +31,9 @@ Head branch name:
 
 - [ ] Installer scripts (`install*.sh`)
 - [ ] Runtime scripts (`csf.pl`, `lfd.pl`, etc.)
-- [ ] Config defaults (`conf/*`)
+- [ ] Config defaults (`etc/conf/*`)
 - [ ] Templates (`tpl/*`)
-- [ ] UI assets (`conf/ui/*`)
+- [ ] UI assets (`etc/conf/ui/*`)
 - [ ] Packaging / release
 
 

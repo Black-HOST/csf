@@ -1056,7 +1056,7 @@ if ($config{TESTING}) {
 	}
 }
 
-open (IN, "<", "conf/cpanel/csf.conf") or die $!;
+open (IN, "<", "etc/conf/cpanel/csf.conf") or die $!;
 flock (IN, LOCK_SH) or die $!;
 my @config = <IN>;
 close (IN);

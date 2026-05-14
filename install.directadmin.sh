@@ -64,7 +64,7 @@ if [ -e "/etc/csf/alert.txt" ]; then
 fi
 
 if [ ! -e "/etc/csf/csf.conf" ]; then
-	cp -avf conf/directadmin/csf.conf /etc/csf/csf.conf
+	cp -avf etc/conf/directadmin/csf.conf /etc/csf/csf.conf
 fi
 
 if [ ! -d /var/lib/csf ]; then
@@ -81,75 +81,75 @@ if [ ! -d /usr/local/csf/tpl ]; then
 fi
 
 if [ ! -e "/etc/csf/csf.allow" ]; then
-	cp -avf conf/directadmin/csf.allow /etc/csf/csf.allow
+	cp -avf etc/conf/directadmin/csf.allow /etc/csf/csf.allow
 fi
 if [ ! -e "/etc/csf/csf.deny" ]; then
-	cp -avf conf/csf.deny /etc/csf/.
+	cp -avf etc/conf/csf.deny /etc/csf/.
 fi
 if [ ! -e "/etc/csf/csf.redirect" ]; then
-	cp -avf conf/csf.redirect /etc/csf/.
+	cp -avf etc/conf/csf.redirect /etc/csf/.
 fi
 if [ ! -e "/etc/csf/csf.resellers" ]; then
-	cp -avf conf/csf.resellers /etc/csf/.
+	cp -avf etc/conf/csf.resellers /etc/csf/.
 fi
 if [ ! -e "/etc/csf/csf.dirwatch" ]; then
-	cp -avf conf/csf.dirwatch /etc/csf/.
+	cp -avf etc/conf/csf.dirwatch /etc/csf/.
 fi
 if [ ! -e "/etc/csf/csf.syslogs" ]; then
-	cp -avf conf/csf.syslogs /etc/csf/.
+	cp -avf etc/conf/csf.syslogs /etc/csf/.
 fi
 if [ ! -e "/etc/csf/csf.logfiles" ]; then
-	cp -avf conf/csf.logfiles /etc/csf/.
+	cp -avf etc/conf/csf.logfiles /etc/csf/.
 fi
 if [ ! -e "/etc/csf/csf.logignore" ]; then
-	cp -avf conf/csf.logignore /etc/csf/.
+	cp -avf etc/conf/csf.logignore /etc/csf/.
 fi
 if [ ! -e "/etc/csf/csf.blocklists" ]; then
-	cp -avf conf/csf.blocklists /etc/csf/.
+	cp -avf etc/conf/csf.blocklists /etc/csf/.
 else
-	cp -avf conf/csf.blocklists /etc/csf/csf.blocklists.new
+	cp -avf etc/conf/csf.blocklists /etc/csf/csf.blocklists.new
 fi
 if [ ! -e "/etc/csf/csf.ignore" ]; then
-	cp -avf conf/directadmin/csf.ignore /etc/csf/csf.ignore
+	cp -avf etc/conf/directadmin/csf.ignore /etc/csf/csf.ignore
 fi
 if [ ! -e "/etc/csf/csf.pignore" ]; then
-	cp -avf conf/directadmin/csf.pignore /etc/csf/csf.pignore
+	cp -avf etc/conf/directadmin/csf.pignore /etc/csf/csf.pignore
 fi
 if [ ! -e "/etc/csf/csf.rignore" ]; then
-	cp -avf conf/csf.rignore /etc/csf/.
+	cp -avf etc/conf/csf.rignore /etc/csf/.
 fi
 if [ ! -e "/etc/csf/csf.fignore" ]; then
-	cp -avf conf/csf.fignore /etc/csf/.
+	cp -avf etc/conf/csf.fignore /etc/csf/.
 fi
 if [ ! -e "/etc/csf/csf.signore" ]; then
-	cp -avf conf/csf.signore /etc/csf/.
+	cp -avf etc/conf/csf.signore /etc/csf/.
 fi
 if [ ! -e "/etc/csf/csf.suignore" ]; then
-	cp -avf conf/csf.suignore /etc/csf/.
+	cp -avf etc/conf/csf.suignore /etc/csf/.
 fi
 if [ ! -e "/etc/csf/csf.uidignore" ]; then
-	cp -avf conf/csf.uidignore /etc/csf/.
+	cp -avf etc/conf/csf.uidignore /etc/csf/.
 fi
 if [ ! -e "/etc/csf/csf.mignore" ]; then
-	cp -avf conf/csf.mignore /etc/csf/.
+	cp -avf etc/conf/csf.mignore /etc/csf/.
 fi
 if [ ! -e "/etc/csf/csf.sips" ]; then
-	cp -avf conf/csf.sips /etc/csf/.
+	cp -avf etc/conf/csf.sips /etc/csf/.
 fi
 if [ ! -e "/etc/csf/csf.dyndns" ]; then
-	cp -avf conf/csf.dyndns /etc/csf/.
+	cp -avf etc/conf/csf.dyndns /etc/csf/.
 fi
 if [ ! -e "/etc/csf/csf.syslogusers" ]; then
-	cp -avf conf/csf.syslogusers /etc/csf/.
+	cp -avf etc/conf/csf.syslogusers /etc/csf/.
 fi
 if [ ! -e "/etc/csf/csf.smtpauth" ]; then
-	cp -avf conf/csf.smtpauth /etc/csf/.
+	cp -avf etc/conf/csf.smtpauth /etc/csf/.
 fi
 if [ ! -e "/etc/csf/csf.rblconf" ]; then
-	cp -avf conf/csf.rblconf /etc/csf/.
+	cp -avf etc/conf/csf.rblconf /etc/csf/.
 fi
 if [ ! -e "/etc/csf/csf.cloudflare" ]; then
-	cp -avf conf/csf.cloudflare /etc/csf/.
+	cp -avf etc/conf/csf.cloudflare /etc/csf/.
 fi
 
 if [ ! -e "/usr/local/csf/tpl/alert.txt" ]; then
@@ -289,7 +289,7 @@ if [ ! -e "/etc/csf/messenger/index.recaptcha.html" ]; then
 	cp -avf etc/messenger/index.recaptcha.html /etc/csf/messenger/.
 fi
 if [ ! -e "/etc/csf/ui" ]; then
-	cp -avf conf/ui /etc/csf/.
+	cp -avf etc/conf/ui /etc/csf/.
 fi
 if [ -e "/etc/cron.d/csfcron.sh" ]; then
 	mv -fv /etc/cron.d/csfcron.sh /etc/cron.d/csf-cron
@@ -365,7 +365,7 @@ cp -avf etc/messenger/*.php /etc/csf/messenger/
 cp -avf uninstall.sh /usr/local/csf/bin/
 cp -avf csftest.pl /usr/local/csf/bin/
 cp -avf remove_apf_bfd.sh /usr/local/csf/bin/
-cp -avf conf/downloadservers /etc/csf/
+cp -avf etc/conf/downloadservers /etc/csf/
 cp -avf version.txt /etc/csf/
 cp -avf LICENSE /etc/csf/
 cp -avf panels/webmin /usr/local/csf/lib/
@@ -373,7 +373,7 @@ cp -avf lib/* /usr/local/csf/lib/
 mkdir -v -p /etc/csf/ui/images
 cp -avf panels/csf/* /etc/csf/ui/images/.
 cp -avf profiles /usr/local/csf/
-cp -avf conf/directadmin/csf.conf /usr/local/csf/profiles/reset_to_defaults.conf
+cp -avf etc/conf/directadmin/csf.conf /usr/local/csf/profiles/reset_to_defaults.conf
 cp -avf lfd.logrotate /etc/logrotate.d/lfd
 
 rm -fv /etc/csf/csf.spamhaus /etc/csf/csf.dshield /etc/csf/csf.tor /etc/csf/csf.bogon

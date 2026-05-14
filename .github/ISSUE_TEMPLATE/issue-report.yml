@@ -162,7 +162,7 @@ body:
         - `install.generic.sh`
         - `csf.pl`
         - `lfd.pl`
-        - `conf/*`
+        - `etc/conf/*`
         - `panels/*`
         - `lib/ConfigServer/*`
         - `.github/tests/*`
