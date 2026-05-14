@@ -43,7 +43,7 @@ if [ ! `id -u` = 0 ]; then
 fi
 echo
 
-mkdir -v -m 0600 /etc/csf
+mkdir -v -p -m 0600 /etc/csf
 
 echo "Checking Perl modules..."
 chmod 700 os.pl
@@ -58,19 +58,19 @@ else
     echo
 fi
 
-mkdir -v -m 0600 /etc/csf
-mkdir -v -m 0600 /var/lib/csf
-mkdir -v -m 0600 /var/lib/csf/backup
-mkdir -v -m 0600 /var/lib/csf/Geo
-mkdir -v -m 0600 /var/lib/csf/ui
-mkdir -v -m 0600 /var/lib/csf/stats
-mkdir -v -m 0600 /var/lib/csf/lock
-mkdir -v -m 0600 /var/lib/csf/webmin
-mkdir -v -m 0600 /var/lib/csf/zone
-mkdir -v -m 0600 /usr/local/csf
-mkdir -v -m 0600 /usr/local/csf/bin
-mkdir -v -m 0600 /usr/local/csf/lib
-mkdir -v -m 0600 /usr/local/csf/tpl
+mkdir -v -p -m 0600 /etc/csf
+mkdir -v -p -m 0600 /var/lib/csf
+mkdir -v -p -m 0600 /var/lib/csf/backup
+mkdir -v -p -m 0600 /var/lib/csf/Geo
+mkdir -v -p -m 0600 /var/lib/csf/ui
+mkdir -v -p -m 0600 /var/lib/csf/stats
+mkdir -v -p -m 0600 /var/lib/csf/lock
+mkdir -v -p -m 0600 /var/lib/csf/webmin
+mkdir -v -p -m 0600 /var/lib/csf/zone
+mkdir -v -p -m 0600 /usr/local/csf
+mkdir -v -p -m 0600 /usr/local/csf/bin
+mkdir -v -p -m 0600 /usr/local/csf/lib
+mkdir -v -p -m 0600 /usr/local/csf/tpl
 
 if [ -e "/etc/csf/alert.txt" ]; then
 	sh migratedata.sh
@@ -366,9 +366,9 @@ fi
 chcon -h system_u:object_r:bin_t:s0 /usr/sbin/lfd
 chcon -h system_u:object_r:bin_t:s0 /usr/sbin/csf
 
-mkdir panels/webmin/csf/images
-mkdir panels/da/images
-mkdir panels/interworx/images
+mkdir -p panels/webmin/csf/images
+mkdir -p panels/da/images
+mkdir -p panels/interworx/images
 
 cp -avf panels/csf/* panels/webmin/csf/images/
 cp -avf panels/csf/* panels/da/images/
@@ -529,7 +529,7 @@ cp -av panels/cwp/csf.pl /usr/local/cwpsrv/htdocs/resources/admin/modules/
 chmod 700 /usr/local/cwpsrv/htdocs/resources/admin/modules/csf.pl
 cp -av panels/cwp/ajax_csfframe.php /usr/local/cwpsrv/htdocs/resources/admin/addons/ajax/
 cp -av panels/cwp/configserver.php /usr/local/cwpsrv/htdocs/resources/admin/include/
-mkdir -v -m 0600 /usr/local/cwpsrv/htdocs/admin/design/csf/
+mkdir -v -p -m 0600 /usr/local/cwpsrv/htdocs/admin/design/csf/
 cp -avf panels/csf/* /usr/local/cwpsrv/htdocs/admin/design/csf/
 
 cd panels/webmin ; tar -czf /usr/local/csf/csfwebmin.tgz ./*
