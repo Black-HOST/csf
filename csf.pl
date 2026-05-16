@@ -1,4 +1,5 @@
 #!/usr/bin/perl
+package sbin::csf;
 ###############################################################################
 # Copyright (C) 2006-2025 Jonathan Michaelson
 #
@@ -42,8 +43,6 @@ use ConfigServer::GetEthDev;
 use ConfigServer::Sendmail;
 use ConfigServer::LookUpIP qw(iplookup);
 
-umask(0177);
-
 our ($verbose, $version, $logintarget, $noowner, $warning, $accept, $ipscidr,
      $ipv6reg, $ipv4reg,$ethdevin, $ethdevout, $ipscidr6, $eth6devin,
 	 $eth6devout, $statemodule, $logouttarget, $cleanreg, $slurpreg,
@@ -57,136 +56,145 @@ our (%input, %config, %ips, %ifaces, %messengerports,%sanitydefault,
 our (@ipset, @faststart4, @faststart6, @faststart4nat, @faststartipset,
      @faststart6nat);
 
-$version = &version;
+sub run {
+	umask(0177);
 
-$ipscidr6 = Net::CIDR::Lite->new;
-$ipscidr = Net::CIDR::Lite->new;
-eval {local $SIG{__DIE__} = undef; $ipscidr6->add("::1/128")};
-eval {local $SIG{__DIE__} = undef; $ipscidr->add("127.0.0.0/8")};
+	$version = &version;
 
-$slurpreg = ConfigServer::Slurp->slurpreg;
-$cleanreg = ConfigServer::Slurp->cleanreg;
-$faststart = 0;
+	$ipscidr6 = Net::CIDR::Lite->new;
+	$ipscidr = Net::CIDR::Lite->new;
+	eval {local $SIG{__DIE__} = undef; $ipscidr6->add("::1/128")};
+	eval {local $SIG{__DIE__} = undef; $ipscidr->add("127.0.0.0/8")};
 
-&process_input;
-&load_config;
+	$slurpreg = ConfigServer::Slurp->slurpreg;
+	$cleanreg = ConfigServer::Slurp->cleanreg;
+	$faststart = 0;
 
-$urlget = ConfigServer::URLGet->new($config{URLGET}, "csf/$version", $config{URLPROXY});
-unless (defined $urlget) {
-	if (-e $config{CURL} or -e $config{WGET}) {
-		$config{URLGET} = 3;
-		$urlget = ConfigServer::URLGet->new($config{URLGET}, "csf/$version", $config{URLPROXY});
-		print "*WARNING* URLGET set to use LWP but perl module is not installed, fallback to using CURL/WGET\n";
-		$warning .= "*WARNING* URLGET set to use LWP but perl module is not installed, fallback to using CURL/WGET\n";
-	} else {
-		$config{URLGET} = 1;
-		$urlget = ConfigServer::URLGet->new($config{URLGET}, "csf/$version", $config{URLPROXY});
-		print "*WARNING* URLGET set to use LWP but perl module is not installed, reverting to HTTP::Tiny\n";
-		$warning .= "*WARNING* URLGET set to use LWP but perl module is not installed, reverting to HTTP::Tiny\n";
-	}
-}
+	&process_input;
+	&load_config;
 
-if ((-e "/etc/csf/csf.disable") and ($input{command} ne "--enable") and ($input{command} ne "-e")) {
-	print "csf and lfd have been disabled, use 'csf -e' to enable\n";
-	my $ok = 0;
-	foreach my $opt ("--version","-v","--check","-c","--ports","-p","--help","-h","--update","-u","-uf","--flush","-f","--profile","") {
-		if ($input{command} eq $opt) {
-			$ok = 1;
-			last;
+	$urlget = ConfigServer::URLGet->new($config{URLGET}, "csf/$version", $config{URLPROXY});
+	unless (defined $urlget) {
+		if (-e $config{CURL} or -e $config{WGET}) {
+			$config{URLGET} = 3;
+			$urlget = ConfigServer::URLGet->new($config{URLGET}, "csf/$version", $config{URLPROXY});
+			print "*WARNING* URLGET set to use LWP but perl module is not installed, fallback to using CURL/WGET\n";
+			$warning .= "*WARNING* URLGET set to use LWP but perl module is not installed, fallback to using CURL/WGET\n";
+		} else {
+			$config{URLGET} = 1;
+			$urlget = ConfigServer::URLGet->new($config{URLGET}, "csf/$version", $config{URLPROXY});
+			print "*WARNING* URLGET set to use LWP but perl module is not installed, reverting to HTTP::Tiny\n";
+			$warning .= "*WARNING* URLGET set to use LWP but perl module is not installed, reverting to HTTP::Tiny\n";
 		}
 	}
-	unless ($ok) {exit 1}
-}
-unless (-e $config{IPTABLES}) {&error(__LINE__,"$config{IPTABLES} $config{IPTABLESWAIT} (iptables binary location) does not exist!")}
-if ($config{IPV6} and !(-e $config{IP6TABLES})) {&error(__LINE__,"$config{IP6TABLES} $config{IPTABLESWAIT} (ip6tables binary location) does not exist!")}
 
-if ((-e "/etc/csf/csf.error") and ($input{command} ne "--startf") and ($input{command} ne "-sf") and ($input{command} ne "-q") and ($input{command} ne "--startq") and ($input{command} ne "--start") and ($input{command} ne "-s") and ($input{command} ne "--restart") and ($input{command} ne "-r") and ($input{command} ne "--enable") and ($input{command} ne "-e")) {
-	open (my $IN, "<", "/etc/csf/csf.error");
-	flock ($IN, LOCK_SH);
-	my $error = <$IN>;
-	close ($IN);
-	chomp $error;
-	print "You have an unresolved error when starting csf:\n$error\n\nYou need to restart csf successfully to remove this warning, or delete /etc/csf/csf.error\n";
-	exit 1;
-}
-
-unless ($input{command} =~ /^--(stop|initdown|initup)$/) {
-	if (-e "/var/lib/csf/csf.4.saved") {unlink "/var/lib/csf/csf.4.saved"}
-	if (-e "/var/lib/csf/csf.4.ipsets") {unlink "/var/lib/csf/csf.4.ipsets"}
-	if (-e "/var/lib/csf/csf.6.saved") {unlink "/var/lib/csf/csf.6.saved"}
-}
-
-if (($input{command} eq "--status") or ($input{command} eq "-l")) {&dostatus}
-elsif (($input{command} eq "--status6") or ($input{command} eq "-l6")) {&dostatus6}
-elsif (($input{command} eq "--version") or ($input{command} eq "-v")) {&doversion}
-elsif (($input{command} eq "--stop") or ($input{command} eq "-f")) {&csflock("lock");&dostop(0);&csflock("unlock")}
-elsif (($input{command} eq "--startf") or ($input{command} eq "-sf")) {&csflock("lock");&dostop(1);&dostart;&csflock("unlock")}
-elsif (($input{command} eq "--start") or ($input{command} eq "-s") or ($input{command} eq "--restart") or ($input{command} eq "-r")) {if ($config{LFDSTART}) {&lfdstart} else {&csflock("lock");&dostop(1);&dostart;&csflock("unlock")}}
-elsif (($input{command} eq "--startq") or ($input{command} eq "-q")) {&lfdstart}
-elsif (($input{command} eq "--restartall") or ($input{command} eq "-ra")) {&dorestartall}
-elsif (($input{command} eq "--add") or ($input{command} eq "-a")) {&doadd}
-elsif (($input{command} eq "--deny") or ($input{command} eq "-d")) {&dodeny}
-elsif (($input{command} eq "--denyrm") or ($input{command} eq "-dr")) {&dokill}
-elsif (($input{command} eq "--denyf") or ($input{command} eq "-df")) {&dokillall}
-elsif (($input{command} eq "--addrm") or ($input{command} eq "-ar")) {&doakill}
-elsif (($input{command} eq "--update") or ($input{command} eq "-u") or ($input{command} eq "-uf")) {&doupdate}
-elsif (($input{command} eq "--disable") or ($input{command} eq "-x")) {&csflock("lock");&dodisable;&csflock("unlock")}
-elsif (($input{command} eq "--enable") or ($input{command} eq "-e")) {&csflock("lock");&doenable;&csflock("unlock")}
-elsif (($input{command} eq "--check") or ($input{command} eq "-c")) {&docheck}
-elsif (($input{command} eq "--grep") or ($input{command} eq "-g")) {&dogrep}
-elsif (($input{command} eq "--iplookup") or ($input{command} eq "-i")) {&doiplookup}
-elsif (($input{command} eq "--temp") or ($input{command} eq "-t")) {&dotempban}
-elsif (($input{command} eq "--temprm") or ($input{command} eq "-tr")) {&dotemprm}
-elsif (($input{command} eq "--temprma") or ($input{command} eq "-tra")) {&dotemprma}
-elsif (($input{command} eq "--temprmd") or ($input{command} eq "-trd")) {&dotemprmd}
-elsif (($input{command} eq "--tempdeny") or ($input{command} eq "-td")) {&dotempdeny}
-elsif (($input{command} eq "--tempallow") or ($input{command} eq "-ta")) {&dotempallow}
-elsif (($input{command} eq "--tempf") or ($input{command} eq "-tf")) {&dotempf}
-elsif (($input{command} eq "--mail") or ($input{command} eq "-m")) {&domail}
-elsif (($input{command} eq "--cdeny") or ($input{command} eq "-cd")) {&doclusterdeny}
-elsif (($input{command} eq "--ctempdeny") or ($input{command} eq "-ctd")) {&doclustertempdeny}
-elsif (($input{command} eq "--callow") or ($input{command} eq "-ca")) {&doclusterallow}
-elsif (($input{command} eq "--ctempallow") or ($input{command} eq "-cta")) {&doclustertempallow}
-elsif (($input{command} eq "--crm") or ($input{command} eq "-cr")) {&doclusterrm}
-elsif (($input{command} eq "--carm") or ($input{command} eq "-car")) {&doclusterarm}
-elsif (($input{command} eq "--cignore") or ($input{command} eq "-ci")) {&doclusterignore}
-elsif (($input{command} eq "--cirm") or ($input{command} eq "-cir")) {&doclusterirm}
-elsif (($input{command} eq "--cping") or ($input{command} eq "-cp")) {&clustersend("PING")}
-elsif (($input{command} eq "--cgrep") or ($input{command} eq "-cg")) {&doclustergrep}
-elsif (($input{command} eq "--cconfig") or ($input{command} eq "-cc")) {&docconfig}
-elsif (($input{command} eq "--cfile") or ($input{command} eq "-cf")) {&docfile}
-elsif (($input{command} eq "--crestart") or ($input{command} eq "-crs")) {&docrestart}
-elsif (($input{command} eq "--watch") or ($input{command} eq "-w")) {&dowatch}
-elsif (($input{command} eq "--logrun") or ($input{command} eq "-lr")) {&dologrun}
-elsif (($input{command} eq "--ports") or ($input{command} eq "-p")) {&doports}
-elsif ($input{command} eq "--cloudflare") {&docloudflare}
-elsif ($input{command} eq "--graphs") {&dographs}
-elsif ($input{command} eq "--lfd") {&dolfd}
-elsif ($input{command} eq "--rbl") {&dorbls}
-elsif ($input{command} eq "--initup") {&doinitup}
-elsif ($input{command} eq "--initdown") {&doinitdown}
-elsif ($input{command} eq "--profile") {&doprofile}
-elsif ($input{command} eq "--mregen") {&domessengerv2}
-elsif ($input{command} eq "--trace") {&dotrace}
-else {&dohelp}
-
-if ($config{TESTING}) {print "*WARNING* TESTING mode is enabled - do not forget to disable it in the configuration\n"}
-
-if ($config{AUTO_UPDATES}) {
-	unless (-e "/etc/cron.d/csf_update") {&autoupdates}
-}
-elsif (-e "/etc/cron.d/csf_update") {unlink "/etc/cron.d/csf_update"}
-
-if (($input{command} eq "--start") or ($input{command} eq "-s") or ($input{command} eq "--restart") or ($input{command} eq "-r") or ($input{command} eq "--restartall") or ($input{command} eq "-ra")) {
-	if ($warning) {print $warning}
-	foreach my $key (keys %config) {
-		my ($insane,$range,$default) = sanity($key,$config{$key});
-		if ($insane) {print "*WARNING* $key sanity check. $key = $config{$key}. Recommended range: $range (Default: $default)\n"}
+	if ((-e "/etc/csf/csf.disable") and ($input{command} ne "--enable") and ($input{command} ne "-e")) {
+		print "csf and lfd have been disabled, use 'csf -e' to enable\n";
+		my $ok = 0;
+		foreach my $opt ("--version","-v","--check","-c","--ports","-p","--help","-h","--update","-u","-uf","--flush","-f","--profile","") {
+			if ($input{command} eq $opt) {
+				$ok = 1;
+				last;
+			}
+		}
+		unless ($ok) {exit 1}
 	}
-	unless ($config{RESTRICT_SYSLOG}) {print "\n*WARNING* RESTRICT_SYSLOG is disabled. See SECURITY WARNING in /etc/csf/csf.conf.\n"}
+	unless (-e $config{IPTABLES}) {&error(__LINE__,"$config{IPTABLES} $config{IPTABLESWAIT} (iptables binary location) does not exist!")}
+	if ($config{IPV6} and !(-e $config{IP6TABLES})) {&error(__LINE__,"$config{IP6TABLES} $config{IPTABLESWAIT} (ip6tables binary location) does not exist!")}
+
+	if ((-e "/etc/csf/csf.error") and ($input{command} ne "--startf") and ($input{command} ne "-sf") and ($input{command} ne "-q") and ($input{command} ne "--startq") and ($input{command} ne "--start") and ($input{command} ne "-s") and ($input{command} ne "--restart") and ($input{command} ne "-r") and ($input{command} ne "--enable") and ($input{command} ne "-e")) {
+		open (my $IN, "<", "/etc/csf/csf.error");
+		flock ($IN, LOCK_SH);
+		my $error = <$IN>;
+		close ($IN);
+		chomp $error;
+		print "You have an unresolved error when starting csf:\n$error\n\nYou need to restart csf successfully to remove this warning, or delete /etc/csf/csf.error\n";
+		exit 1;
+	}
+
+	unless ($input{command} =~ /^--(stop|initdown|initup)$/) {
+		if (-e "/var/lib/csf/csf.4.saved") {unlink "/var/lib/csf/csf.4.saved"}
+		if (-e "/var/lib/csf/csf.4.ipsets") {unlink "/var/lib/csf/csf.4.ipsets"}
+		if (-e "/var/lib/csf/csf.6.saved") {unlink "/var/lib/csf/csf.6.saved"}
+	}
+
+	if (($input{command} eq "--status") or ($input{command} eq "-l")) {&dostatus}
+	elsif (($input{command} eq "--status6") or ($input{command} eq "-l6")) {&dostatus6}
+	elsif (($input{command} eq "--version") or ($input{command} eq "-v")) {&doversion}
+	elsif (($input{command} eq "--stop") or ($input{command} eq "-f")) {&csflock("lock");&dostop(0);&csflock("unlock")}
+	elsif (($input{command} eq "--startf") or ($input{command} eq "-sf")) {&csflock("lock");&dostop(1);&dostart;&csflock("unlock")}
+	elsif (($input{command} eq "--start") or ($input{command} eq "-s") or ($input{command} eq "--restart") or ($input{command} eq "-r")) {if ($config{LFDSTART}) {&lfdstart} else {&csflock("lock");&dostop(1);&dostart;&csflock("unlock")}}
+	elsif (($input{command} eq "--startq") or ($input{command} eq "-q")) {&lfdstart}
+	elsif (($input{command} eq "--restartall") or ($input{command} eq "-ra")) {&dorestartall}
+	elsif (($input{command} eq "--add") or ($input{command} eq "-a")) {&doadd}
+	elsif (($input{command} eq "--deny") or ($input{command} eq "-d")) {&dodeny}
+	elsif (($input{command} eq "--denyrm") or ($input{command} eq "-dr")) {&dokill}
+	elsif (($input{command} eq "--denyf") or ($input{command} eq "-df")) {&dokillall}
+	elsif (($input{command} eq "--addrm") or ($input{command} eq "-ar")) {&doakill}
+	elsif (($input{command} eq "--update") or ($input{command} eq "-u") or ($input{command} eq "-uf")) {&doupdate}
+	elsif (($input{command} eq "--disable") or ($input{command} eq "-x")) {&csflock("lock");&dodisable;&csflock("unlock")}
+	elsif (($input{command} eq "--enable") or ($input{command} eq "-e")) {&csflock("lock");&doenable;&csflock("unlock")}
+	elsif (($input{command} eq "--check") or ($input{command} eq "-c")) {&docheck}
+	elsif (($input{command} eq "--grep") or ($input{command} eq "-g")) {&dogrep}
+	elsif (($input{command} eq "--iplookup") or ($input{command} eq "-i")) {&doiplookup}
+	elsif (($input{command} eq "--temp") or ($input{command} eq "-t")) {&dotempban}
+	elsif (($input{command} eq "--temprm") or ($input{command} eq "-tr")) {&dotemprm}
+	elsif (($input{command} eq "--temprma") or ($input{command} eq "-tra")) {&dotemprma}
+	elsif (($input{command} eq "--temprmd") or ($input{command} eq "-trd")) {&dotemprmd}
+	elsif (($input{command} eq "--tempdeny") or ($input{command} eq "-td")) {&dotempdeny}
+	elsif (($input{command} eq "--tempallow") or ($input{command} eq "-ta")) {&dotempallow}
+	elsif (($input{command} eq "--tempf") or ($input{command} eq "-tf")) {&dotempf}
+	elsif (($input{command} eq "--mail") or ($input{command} eq "-m")) {&domail}
+	elsif (($input{command} eq "--cdeny") or ($input{command} eq "-cd")) {&doclusterdeny}
+	elsif (($input{command} eq "--ctempdeny") or ($input{command} eq "-ctd")) {&doclustertempdeny}
+	elsif (($input{command} eq "--callow") or ($input{command} eq "-ca")) {&doclusterallow}
+	elsif (($input{command} eq "--ctempallow") or ($input{command} eq "-cta")) {&doclustertempallow}
+	elsif (($input{command} eq "--crm") or ($input{command} eq "-cr")) {&doclusterrm}
+	elsif (($input{command} eq "--carm") or ($input{command} eq "-car")) {&doclusterarm}
+	elsif (($input{command} eq "--cignore") or ($input{command} eq "-ci")) {&doclusterignore}
+	elsif (($input{command} eq "--cirm") or ($input{command} eq "-cir")) {&doclusterirm}
+	elsif (($input{command} eq "--cping") or ($input{command} eq "-cp")) {&clustersend("PING")}
+	elsif (($input{command} eq "--cgrep") or ($input{command} eq "-cg")) {&doclustergrep}
+	elsif (($input{command} eq "--cconfig") or ($input{command} eq "-cc")) {&docconfig}
+	elsif (($input{command} eq "--cfile") or ($input{command} eq "-cf")) {&docfile}
+	elsif (($input{command} eq "--crestart") or ($input{command} eq "-crs")) {&docrestart}
+	elsif (($input{command} eq "--watch") or ($input{command} eq "-w")) {&dowatch}
+	elsif (($input{command} eq "--logrun") or ($input{command} eq "-lr")) {&dologrun}
+	elsif (($input{command} eq "--ports") or ($input{command} eq "-p")) {&doports}
+	elsif ($input{command} eq "--cloudflare") {&docloudflare}
+	elsif ($input{command} eq "--graphs") {&dographs}
+	elsif ($input{command} eq "--lfd") {&dolfd}
+	elsif ($input{command} eq "--rbl") {&dorbls}
+	elsif ($input{command} eq "--initup") {&doinitup}
+	elsif ($input{command} eq "--initdown") {&doinitdown}
+	elsif ($input{command} eq "--profile") {&doprofile}
+	elsif ($input{command} eq "--mregen") {&domessengerv2}
+	elsif ($input{command} eq "--trace") {&dotrace}
+	else {&dohelp}
+
+	if ($config{TESTING}) {print "*WARNING* TESTING mode is enabled - do not forget to disable it in the configuration\n"}
+
+	if ($config{AUTO_UPDATES}) {
+		unless (-e "/etc/cron.d/csf_update") {&autoupdates}
+	}
+	elsif (-e "/etc/cron.d/csf_update") {unlink "/etc/cron.d/csf_update"}
+
+	if (($input{command} eq "--start") or ($input{command} eq "-s") or ($input{command} eq "--restart") or ($input{command} eq "-r") or ($input{command} eq "--restartall") or ($input{command} eq "-ra")) {
+		if ($warning) {print $warning}
+		foreach my $key (keys %config) {
+			my ($insane,$range,$default) = sanity($key,$config{$key});
+			if ($insane) {print "*WARNING* $key sanity check. $key = $config{$key}. Recommended range: $range (Default: $default)\n"}
+		}
+		unless ($config{RESTRICT_SYSLOG}) {print "\n*WARNING* RESTRICT_SYSLOG is disabled. See SECURITY WARNING in /etc/csf/csf.conf.\n"}
+	}
+
+	exit 0;
 }
 
-exit 0;
+sub run_open3 {
+	return open3(@_);
+}
+
 
 # end main
 ###############################################################################
@@ -456,7 +464,7 @@ sub doinitup {
 					close ($IN);
 					chomp @data;
 					my ($childin, $childout);
-					my $cmdpid = open3($childin, $childout, $childout, $config{IPSET},"restore");
+					my $cmdpid = run_open3($childin, $childout, $childout, $config{IPSET},"restore");
 					print $childin join("\n",@data)."\n";
 					close $childin;
 					my @results = <$childout>;
@@ -474,7 +482,7 @@ sub doinitup {
 			close ($IN);
 			chomp @data;
 			my ($childin, $childout);
-			my $cmdpid = open3($childin, $childout, $childout, $config{IPTABLES_RESTORE});
+			my $cmdpid = run_open3($childin, $childout, $childout, $config{IPTABLES_RESTORE});
 			print $childin join("\n",@data)."\n";
 			close $childin;
 			my @results = <$childout>;
@@ -497,7 +505,7 @@ sub doinitup {
 				close ($IN);
 				chomp @data;
 				my ($childin, $childout);
-				my $cmdpid = open3($childin, $childout, $childout, $config{IP6TABLES_RESTORE});
+				my $cmdpid = run_open3($childin, $childout, $childout, $config{IP6TABLES_RESTORE});
 				print $childin join("\n",@data)."\n";
 				close $childin;
 				my @results = <$childout>;
@@ -527,7 +535,7 @@ sub doinitdown {
 			print "(saving iptables) ";
 
 			my ($childin, $childout);
-			my $cmdpid = open3($childin, $childout, $childout, $config{IPTABLES_SAVE});
+			my $cmdpid = run_open3($childin, $childout, $childout, $config{IPTABLES_SAVE});
 			close $childin;
 			my @results = <$childout>;
 			waitpid ($cmdpid, 0);
@@ -542,7 +550,7 @@ sub doinitdown {
 					print "(saving ipsets) ";
 
 					my ($childin, $childout);
-					my $cmdpid = open3($childin, $childout, $childout, $config{IPSET}, "save");
+					my $cmdpid = run_open3($childin, $childout, $childout, $config{IPSET}, "save");
 					close $childin;
 					my @results = <$childout>;
 					waitpid ($cmdpid, 0);
@@ -558,7 +566,7 @@ sub doinitdown {
 			print "(saving ip6tables) ";
 
 			my ($childin, $childout);
-			my $cmdpid = open3($childin, $childout, $childout, $config{IP6TABLES_SAVE});
+			my $cmdpid = run_open3($childin, $childout, $childout, $config{IP6TABLES_SAVE});
 			close $childin;
 			my @results = <$childout>;
 			waitpid ($cmdpid, 0);
@@ -929,7 +937,7 @@ sub dostop {
 sub dostart {
 	if (ConfigServer::Service::type() eq "systemd") {
 		my ($childin, $childout);
-		my $cmdpid = open3($childin, $childout, $childout, $config{SYSTEMCTL},"is-active","firewalld");
+		my $cmdpid = run_open3($childin, $childout, $childout, $config{SYSTEMCTL},"is-active","firewalld");
 		my @reply = <$childout>;
 		waitpid ($cmdpid, 0);
 		chomp @reply;
@@ -948,7 +956,7 @@ sub dostart {
 	$noowner = 0;
 	if ($config{VPS} and $config{SMTP_BLOCK}) {
 		my ($childin, $childout);
-		my $cmdpid = open3($childin, $childout, $childout, "$config{IPTABLES} $config{IPTABLESWAIT} -I OUTPUT -p tcp --dport 9999 -m owner --uid-owner 0 -j $accept");
+		my $cmdpid = run_open3($childin, $childout, $childout, "$config{IPTABLES} $config{IPTABLESWAIT} -I OUTPUT -p tcp --dport 9999 -m owner --uid-owner 0 -j $accept");
 		my @ipdata = <$childout>;
 		waitpid ($cmdpid, 0);
 		chomp @ipdata;
@@ -3849,7 +3857,8 @@ sub dogrep {
 	my $head = 0;
 	my $oldchain = "INPUT";
 	my $table = "filter";
-	my ($chain,$rest);
+	my $chain = "";
+	my $rest = "";
 	format GREP =
 @<<<<< @<<<<<<<<<<<<<<< @*
 $table, $chain, $rest
@@ -3861,7 +3870,7 @@ $table, $chain, $rest
 	if ($config{MANGLE}) {$command .= " ;echo 'mangle table:\n' ;  $config{IPTABLES} $config{IPTABLESWAIT} -v -t mangle -L -n --line-numbers"}
 	if ($config{RAW}) {$command .= " ; echo 'raw table:\n' ; $config{IPTABLES} $config{IPTABLESWAIT} -v -t raw -L -n --line-numbers"}
 	my ($childin, $childout);
-	my $pid = open3($childin, $childout, $childout, $command);
+	my $pid = run_open3($childin, $childout, $childout, $command);
 	my @output = <$childout>;
 	waitpid ($pid, 0);
 	chomp @output;
@@ -3911,7 +3920,7 @@ $table, $chain, $rest
 		my $head = 0;
 		my $oldchain = "INPUT";
 		my ($childin, $childout);
-		my $pid = open3($childin, $childout, $childout, $config{IPSET}, "-n", "list");
+		my $pid = run_open3($childin, $childout, $childout, $config{IPSET}, "-n", "list");
 		my @output = <$childout>;
 		waitpid ($pid, 0);
 		chomp @output;
@@ -3971,7 +3980,7 @@ $table, $chain, $rest
 		
 			my $hit = 0;
 			my ($childin, $childout);
-			my $pid = open3($childin, $childout, $childout, $config{IPSET}, "test", "$chain", "$ipmatch");
+			my $pid = run_open3($childin, $childout, $childout, $config{IPSET}, "test", "$chain", "$ipmatch");
 			my @output = <$childout>;
 			waitpid ($pid, 0);
 			chomp @output;
@@ -4007,7 +4016,7 @@ $table, $chain, $rest
 		if ($config{MANGLE6}) {$command .= " ; echo 'mangle table:\n' ; $config{IP6TABLES} $config{IPTABLESWAIT} -v -t mangle -L -n --line-numbers"}
 		if ($config{RAW6}) {$command .= " ; echo 'raw table:\n' ; $config{IP6TABLES} $config{IPTABLESWAIT} -v -t raw -L -n --line-numbers"}
 		my ($childin, $childout);
-		my $pid = open3($childin, $childout, $childout, $command);
+		my $pid = run_open3($childin, $childout, $childout, $command);
 		my @output = <$childout>;
 		waitpid ($pid, 0);
 		chomp @output;
@@ -4059,6 +4068,7 @@ $table, $chain, $rest
 	close ($IN);
 	chomp @tempallow;
 	foreach my $line (@tempallow) {
+		next unless $line =~ /\S/;
 		my ($time,$ipd,$port,$inout,$timeout,$message) = split(/\|/,$line);
 		checkip(\$ipd);
 		if ($ipd eq $ipmatch) {
@@ -4108,6 +4118,7 @@ $table, $chain, $rest
 	close ($TEMPBAN);
 	chomp @tempdeny;
 	foreach my $line (@tempdeny) {
+		next unless $line =~ /\S/;
 		my ($time,$ipd,$port,$inout,$timeout,$message) = split(/\|/,$line);
 		checkip(\$ipd);
 		if ($ipd eq $ipmatch) {
@@ -5593,7 +5604,7 @@ sub loadmodule {
 		local $SIG{'ALRM'} = sub {die};
 		alarm(5);
 		my ($childin, $childout);
-		my $pid = open3($childin, $childout, $childout, $config{MODPROBE},$module);
+		my $pid = run_open3($childin, $childout, $childout, $config{MODPROBE},$module);
 		@output = <$childout>;
 		waitpid ($pid, 0);
 		alarm(0);
@@ -5653,7 +5664,7 @@ sub syscommand {
 				local $SIG{'ALRM'} = sub {die "alarm\n"};
 				alarm($config{WAITLOCK_TIMEOUT});
 				my ($childin, $childout);
-				my $cmdpid = open3($childin, $childout, $childout, $command);
+				my $cmdpid = run_open3($childin, $childout, $childout, $command);
 				@output = <$childout>;
 				waitpid ($cmdpid, 0);
 				alarm(0);
@@ -5664,7 +5675,7 @@ sub syscommand {
 			}
 		} else {
 			my ($childin, $childout);
-			my $cmdpid = open3($childin, $childout, $childout, $command);
+			my $cmdpid = run_open3($childin, $childout, $childout, $command);
 			@output = <$childout>;
 			waitpid ($cmdpid, 0);
 		}
@@ -5684,7 +5695,7 @@ sub syscommand {
 				if ($config{DEBUG} >= 1) {print "debug[$line]: Retry (".($cnt+1).") [$command] due to [$output[0]]"}
 				if ($iptableslock) {&iptableslock("lock")}
 				my ($childin, $childout);
-				my $cmdpid = open3($childin, $childout, $childout, $command);
+				my $cmdpid = run_open3($childin, $childout, $childout, $command);
 				my @output = <$childout>;
 				waitpid ($cmdpid, 0);
 				if ($iptableslock) {&iptableslock("unlock")}
@@ -5794,7 +5805,7 @@ sub faststart {
 		if ($config{DEBUG} >= 2) {print join("\n",@faststart4)."\n"};
 		&iptableslock("lock");
 		my ($childin, $childout);
-		my $cmdpid = open3($childin, $childout, $childout, "$config{IPTABLES_RESTORE} $config{IPTABLESWAIT} -n");
+		my $cmdpid = run_open3($childin, $childout, $childout, "$config{IPTABLES_RESTORE} $config{IPTABLESWAIT} -n");
 		print $childin "*filter\n".join("\n",@faststart4)."\nCOMMIT\n";
 		close $childin;
 		my @results = <$childout>;
@@ -5816,7 +5827,7 @@ sub faststart {
 		if ($config{DEBUG} >= 2) {print join("\n",@faststart4nat)."\n"};
 		&iptableslock("lock");
 		my ($childin, $childout);
-		my $cmdpid = open3($childin, $childout, $childout, "$config{IPTABLES_RESTORE} $config{IPTABLESWAIT} -n");
+		my $cmdpid = run_open3($childin, $childout, $childout, "$config{IPTABLES_RESTORE} $config{IPTABLESWAIT} -n");
 		print $childin "*nat\n".join("\n",@faststart4nat)."\nCOMMIT\n";
 		close $childin;
 		my @results = <$childout>;
@@ -5838,7 +5849,7 @@ sub faststart {
 		if ($config{DEBUG} >= 2) {print join("\n",@faststart6)."\n"};
 		&iptableslock("lock");
 		my ($childin, $childout);
-		my $cmdpid = open3($childin, $childout, $childout, "$config{IP6TABLES_RESTORE} $config{IPTABLESWAIT} -n");
+		my $cmdpid = run_open3($childin, $childout, $childout, "$config{IP6TABLES_RESTORE} $config{IPTABLESWAIT} -n");
 		print $childin "*filter\n".join("\n",@faststart6)."\nCOMMIT\n";
 		close $childin;
 		my @results = <$childout>;
@@ -5860,7 +5871,7 @@ sub faststart {
 		if ($config{DEBUG} >= 2) {print join("\n",@faststart6nat)."\n"};
 		&iptableslock("lock");
 		my ($childin, $childout);
-		my $cmdpid = open3($childin, $childout, $childout, "$config{IP6TABLES_RESTORE} $config{IPTABLESWAIT} -n");
+		my $cmdpid = run_open3($childin, $childout, $childout, "$config{IP6TABLES_RESTORE} $config{IPTABLESWAIT} -n");
 		print $childin "*nat\n".join("\n",@faststart6nat)."\nCOMMIT\n";
 		close $childin;
 		my @results = <$childout>;
@@ -5877,7 +5888,7 @@ sub faststart {
 	if (@faststartipset) {
 		if ($verbose) {print "csf: FASTSTART loading $text (IPSET)\n"}
 		my ($childin, $childout);
-		my $cmdpid = open3($childin, $childout, $childout, $config{IPSET},"restore");
+		my $cmdpid = run_open3($childin, $childout, $childout, $config{IPSET},"restore");
 		print $childin join("\n",@faststartipset)."\n";
 		close $childin;
 		my @results = <$childout>;
@@ -5925,7 +5936,7 @@ sub ipsetcreate {
 	if ($set =~ /_6/) {$family = "inet6"}
 	if ($verbose) {print "csf: IPSET creating set $set\n"}
 	my ($childin, $childout);
-	my $cmdpid = open3($childin, $childout, $childout, $config{IPSET},"create","-exist",$set,"hash:net","family",$family,"hashsize",$config{LF_IPSET_HASHSIZE},"maxelem",$config{LF_IPSET_MAXELEM});
+	my $cmdpid = run_open3($childin, $childout, $childout, $config{IPSET},"create","-exist",$set,"hash:net","family",$family,"hashsize",$config{LF_IPSET_HASHSIZE},"maxelem",$config{LF_IPSET_MAXELEM});
 	close $childin;
 	my @results = <$childout>;
 	waitpid ($cmdpid, 0);
@@ -5944,7 +5955,7 @@ sub ipsetrestore {
 	$SIG{PIPE} = 'IGNORE';
 	if ($verbose) {print "csf: IPSET loading set $set with ".scalar(@ipset)." entries\n"}
 	my ($childin, $childout);
-	my $cmdpid = open3($childin, $childout, $childout, $config{IPSET},"restore");
+	my $cmdpid = run_open3($childin, $childout, $childout, $config{IPSET},"restore");
 	print $childin join("\n",@ipset)."\n";
 	close $childin;
 	my @results = <$childout>;
@@ -5974,7 +5985,7 @@ sub ipsetadd {
 	}
 	if ($verbose) {print "csf: IPSET adding [$ip] to set [$set]\n"}
 	my ($childin, $childout);
-	my $cmdpid = open3($childin, $childout, $childout, $config{IPSET},"add","-exist",$set,$ip);
+	my $cmdpid = run_open3($childin, $childout, $childout, $config{IPSET},"add","-exist",$set,$ip);
 	close $childin;
 	my @results = <$childout>;
 	waitpid ($cmdpid, 0);
@@ -5998,7 +6009,7 @@ sub ipsetdel {
 	if ($set eq "" or $ip eq "") {return}
 	if ($verbose) {print "csf: IPSET deleting [$ip] from set [$set]\n"}
 	my ($childin, $childout);
-	my $cmdpid = open3($childin, $childout, $childout, $config{IPSET},"del",$set,$ip);
+	my $cmdpid = run_open3($childin, $childout, $childout, $config{IPSET},"del",$set,$ip);
 	close $childin;
 	my @results = <$childout>;
 	waitpid ($cmdpid, 0);
@@ -6011,3 +6022,7 @@ sub ipsetdel {
 }
 # end ipsetadd
 ###############################################################################
+
+run() unless caller();
+
+1;
