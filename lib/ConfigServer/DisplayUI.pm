@@ -117,7 +117,7 @@ sub main {
 		print "<div><p>Checking version...</p>\n\n";
 		my ($upgrade, $actv) = &manualversion($myv);
 		if ($upgrade) {
-			print "<form action='$script' method='post'><button name='action' value='upgrade' type='submit' class='btn btn-default'>Upgrade csf</button> A new version of csf (v$actv) is available. Upgrading will retain your settings. <a href='https://$config{DOWNLOADSERVER}/csf/changelog.txt' target='_blank'>View ChangeLog</a></form>\n";
+			print "<form action='$script' method='post'><button name='action' value='upgrade' type='submit' class='btn btn-default'>Upgrade csf</button> A new version of csf (v$actv) is available. Upgrading will retain your settings. <a href='https://github.com/Black-HOST/csf/releases/latest' target='_blank'>View ChangeLog</a></form>\n";
 		} else {
 			if ($actv ne "") {
 				print "<div class='bs-callout bs-callout-danger'>$actv</div>\n";
@@ -2137,7 +2137,7 @@ EOF
 		print "<thead><tr><th colspan='2'>Upgrade</th></tr></thead>";
 		my ($upgrade, $actv) = &csgetversion("csf",$myv);
 		if ($upgrade) {
-			print "<tr><td><button name='action' value='upgrade' type='submit' class='btn btn-default'>Upgrade csf</button></td><td style='width:100%'><b>A new version of csf (v$actv) is available. Upgrading will retain your settings<br><a href='https://$config{DOWNLOADSERVER}/csf/changelog.txt' target='_blank'>View ChangeLog</a></b></td></tr>\n";
+			print "<tr><td><button name='action' value='upgrade' type='submit' class='btn btn-default'>Upgrade csf</button></td><td style='width:100%'><b>A new version of csf (v$actv) is available. Upgrading will retain your settings<br><a href='https://github.com/Black-HOST/csf/releases/latest' target='_blank'>View ChangeLog</a></b></td></tr>\n";
 		} else {
 			print "<tr><td><button name='action' value='manualcheck' type='submit' class='btn btn-default'>Manual Check</button></td><td>";
 			if ($actv ne "") {
@@ -2149,27 +2149,6 @@ EOF
 		}
 		if (!$config{INTERWORX} and (-e "/etc/apf" or -e "/usr/local/bfd")) {
 			print "<tr><td><button name='action' value='remapf' type='submit' class='btn btn-default'>Remove APF/BFD</button></td><td style='width:100%'>Remove APF/BFD from the server. You must not run both APF or BFD with csf on the same server</td></tr>\n";
-		}
-		unless (-e "/etc/cxs/cxs.pl") {
-			if (-e "/usr/local/cpanel/version" or $config{DIRECTADMIN} or $config{INTERWORX} or $config{VESTA} or $config{CWP} or $config{CYBERPANEL}) {
-				print "<tr><td colspan='2'>\n";
-				print "<div class='bs-callout bs-callout-info h4'>Add server and user data protection against exploits using <a href='https://configserver.com/cp/cxs.html' target='_blank'>ConfigServer eXploit Scanner (cxs)</a></div>\n";
-				print "</td></tr>\n";
-			}
-		}
-		unless (-e "/etc/osm/osmd.pl") {
-			if (-e "/usr/local/cpanel/version" or $config{DIRECTADMIN}) {
-				print "<tr><td colspan='2'>\n";
-				print "<div class='bs-callout bs-callout-info h4'>Add outgoing spam monitoring and prevention using <a href='https://configserver.com/cp/osm.html' target='_blank'>ConfigServer Outgoing Spam Monitor(osm)</a></div>\n";
-				print "</td></tr>\n";
-			}
-		}
-		unless (-e "/usr/msfe/mschange.pl") {
-			if (-e "/usr/local/cpanel/version" or $config{DIRECTADMIN}) {
-				print "<tr><td colspan='2'>\n";
-				print "<div class='bs-callout bs-callout-info h4'>Add effective incoming virus and spam detection and user level processing using <a href='https://configserver.com/cp/msfe.html' target='_blank'>ConfigServer MailScanner Front-End (msfe)</a></div>\n";
-				print "</td></tr>\n";
-			}
 		}
 		print "</table>\n";
 		print "</form>\n";
@@ -2360,7 +2339,7 @@ EOF
 
 		print "<div class='panel panel-info'>\n";
 		print "<div class='panel-heading'>Development Contribution</div>";
-		print "<div class='panel-body'>We are very happy to be able to provide this and other products for free. However, it does take time for us to develop and maintain them. If you would like to help with their development by providing a PayPal contribution, please <a href='mailto:sales\@waytotheweb.com?Subject=ConfigServer%20Contribution'>contact us</a> for details</div>\n";
+		print "<div class='panel-body'>BlackHOST maintains csf as a free, GPL-licensed continuation of ConfigServer Security &amp; Firewall after the upstream wind-down. To support development, report issues, or contribute, visit the project on <a href='https://github.com/Black-HOST/csf' target='_blank'>GitHub</a>.</div>\n";
 		print "</div>\n";
 
 	}
@@ -2368,7 +2347,7 @@ EOF
 	unless ($FORM{action} eq "tailcmd" or $FORM{action} =~ /^cf/ or $FORM{action} eq "logtailcmd" or $FORM{action} eq "loggrepcmd") {
 		print "<br>\n";
 		print "<div class='well well-sm'>csf: v$myv</div>";
-		print "<p>&copy;2006-2023, <a href='http://www.configserver.com' target='_blank'>ConfigServer Services</a> (Jonathan Michaelson)</p>\n";
+		print "<p>&copy;2006-2025 ConfigServer Services (Jonathan Michaelson) &middot; maintained 2026&ndash;present by <a href='https://github.com/Black-HOST/csf' target='_blank'>BlackHOST</a></p>\n";
 		print "</div>\n";
 	}
 

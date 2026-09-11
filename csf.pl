@@ -3794,7 +3794,7 @@ sub doupdate {
 				print "\nRestarting csf and lfd...\n";
 				system ("/usr/sbin/csf -r");
 				ConfigServer::Service::restartlfd();
-				print "\n...All done.\n\nChangelog: https://$config{DOWNLOADSERVER}/csf/changelog.txt\n";
+				print "\n...All done.\n\nChangelog: https://github.com/Black-HOST/csf/releases/latest\n";
 			}
 		} else {
 			if (-t STDOUT) {print "csf is already at the latest version: v$version\n"} ##no critic
