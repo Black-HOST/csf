@@ -1,0 +1,7 @@
+[
+  {
+    "name": "messenger",
+    "dockerfile": ".github/tests/integration/Dockerfile.messenger-apache",
+    "script": ".github/tests/integration/messenger-apache.sh"
+  }
+]

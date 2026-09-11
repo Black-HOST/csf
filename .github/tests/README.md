@@ -18,11 +18,15 @@ It groups the checks as follows:
 - **unit → tests** — discovers `.t` files and runs each in its own matrix job.
 - **install → smoke / upgrade / uninstall** — validates the installation lifecycle.
 - **compatibility → distro checks** — calls `.github/workflows/compatibility.yml`.
-- **security → messenger** — calls `.github/workflows/security.yml` for the isolated Apache/PHP regression test.
+- **security → security-tests** — loads `.github/security.json` and runs each suite in its own matrix job, currently `messenger`.
 
-Add future security checks as jobs alongside `messenger` in the reusable
-`security.yml` workflow, keeping the main workflow as the entrypoint. Messenger's
-Perl unit regressions remain in the normal unit-test matrix.
+Like `unit → tests`, the Actions graph shows a separate `security` discovery
+job feeding the `security-tests` matrix. Add future security suites to
+`.github/security.json` with a unique `name`, a `dockerfile` path, and a Bash
+`script` path relative to the repository root. Each suite runs in its own
+disposable container with networking disabled and the checkout mounted
+read-only at `/repo`. Messenger's Perl unit regressions remain in the normal
+unit-test matrix.
 
 ## Directory layout
 
@@ -133,8 +137,8 @@ In practice that means:
 
 ## Messenger Apache integration test
 
-GitHub Actions runs this as **security / messenger**, through the reusable
-`.github/workflows/security.yml` workflow.
+GitHub Actions runs this as **messenger** in the `security-tests` matrix,
+after the **security** discovery job in `.github/workflows/tests.yml`.
 
 Run this test only in a disposable Docker container. It writes real CSF/Apache
 paths inside that container and never installs CSF or changes the host firewall:

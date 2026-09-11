@@ -112,7 +112,34 @@ jobs:
           bash uninstall.sh
 
   security:
-    uses: ./.github/workflows/security.yml
+    runs-on: ubuntu-latest
+    outputs:
+      matrix: ${{ steps.scan.outputs.matrix }}
+    steps:
+      - uses: actions/checkout@v4
+      - id: scan
+        run: |
+          matrix=$(jq -c . .github/security.json)
+          echo "matrix=$matrix" >> "$GITHUB_OUTPUT"
+
+  security-tests:
+    needs: security
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        include: ${{ fromJson(needs.security.outputs.matrix) }}
+    name: "${{ matrix.name }}"
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build disposable security test environment
+        env:
+          TEST_DOCKERFILE: ${{ matrix.dockerfile }}
+        run: docker build -f "$TEST_DOCKERFILE" -t csf-security-test .
+      - name: Run security regression test
+        env:
+          TEST_SCRIPT: ${{ matrix.script }}
+        run: docker run --rm --network none -v "$GITHUB_WORKSPACE:/repo:ro" csf-security-test bash "/repo/$TEST_SCRIPT"
 
   compatibility:
     uses: ./.github/workflows/compatibility.yml
