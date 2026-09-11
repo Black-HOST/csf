@@ -812,7 +812,7 @@ EOF
 		}
 	}
 
-	foreach my $line (slurp("/usr/local/csf/tpl/$webserver.main.txt")) {
+	foreach my $line (&_messenger_template($webserver,"main")) {
 		$line =~ s/\[PORT\]/$config{MESSENGER_HTML}/g;
 		if ($line =~ /Listen \[::\]:/ and !$config{IPV6}) {next}
 		$line =~ s/\[SERVERNAME\]/$hostname/g;
@@ -824,7 +824,7 @@ EOF
 	}
 	
 	if ($config{MESSENGER_HTML_IN} ne "") {
-		foreach my $line (slurp("/usr/local/csf/tpl/$webserver.http.txt")) {
+		foreach my $line (&_messenger_template($webserver,"http")) {
 			$line =~ s/\[PORT\]/$config{MESSENGER_HTML}/g;
 			if ($line =~ /Listen \[::\]:/ and !$config{IPV6}) {next}
 			$line =~ s/\[SERVERNAME\]/$hostname/g;
@@ -882,7 +882,7 @@ EOF
 		my @virtualhost;
 		my $start = 0;
 		my $key = $ssldomainkeys[0];
-		foreach my $line (slurp("/usr/local/csf/tpl/$webserver.https.txt")) {
+		foreach my $line (&_messenger_template($webserver,"https")) {
 			if ($line =~ /^\# Virtualhost start/) {$start = 1}
 			if ($start) {
 				if ($line =~ /^\# Virtualhost end/) {$start = 0}
@@ -1040,6 +1040,33 @@ EOF
 	return;
 }
 # end messengerv3
+###############################################################################
+# start _messenger_template
+sub _messenger_template {
+	my ($server,$type) = @_;
+	my @template = slurp("/usr/local/csf/tpl/$server.$type.txt");
+	if ($server ne "apache") {return @template}
+
+	# CVE-2026-67402: installers preserve existing/customized templates. Filter
+	# the legacy system-binary CGI mapping on every regeneration, not just in
+	# the shipped template. Keep unrelated directives and PHP handlers intact.
+	my @safe;
+	my @statement;
+	foreach my $line (@template) {
+		push @statement, $line;
+		if ($line =~ /\\$/) {next}
+		my $directive = join("\n",@statement);
+		$directive =~ s/\\\n//g;
+		unless ($directive =~ /^\s*ScriptAlias\s+(?:"[^"]*"|'[^']*'|\S+)\s+(?:"\/usr\/bin\/?"|'\/usr\/bin\/?'|\/usr\/bin\/?)(?:\s|$)/i) {
+			push @safe, @statement;
+		}
+		@statement = ();
+	}
+	# Preserve malformed trailing continuations for the normal config test.
+	push @safe, @statement;
+	return @safe;
+}
+# end _messenger_template
 ###############################################################################
 # start _read_request_line
 sub _read_request_line {

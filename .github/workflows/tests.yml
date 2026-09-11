@@ -111,5 +111,34 @@ jobs:
           cd "$GITHUB_WORKSPACE"
           bash uninstall.sh
 
+  security:
+    runs-on: ubuntu-latest
+    outputs:
+      matrix: ${{ steps.scan.outputs.matrix }}
+    steps:
+      - uses: actions/checkout@v4
+      - id: scan
+        shell: bash
+        run: |
+          matrix=$(find .github/tests/security -mindepth 2 -maxdepth 2 -type f -name Dockerfile | sort | jq -R -s -c 'split("\n") | map(select(length > 0) | split("/")[-2])')
+          echo "matrix=$matrix" >> "$GITHUB_OUTPUT"
+
+  security-tests:
+    needs: security
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        suite: ${{ fromJson(needs.security.outputs.matrix) }}
+    name: "${{ matrix.suite }}"
+    env:
+      TEST_SUITE_DIR: .github/tests/security/${{ matrix.suite }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build disposable security test environment
+        run: docker build -f "$TEST_SUITE_DIR/Dockerfile" -t csf-security-test .
+      - name: Run security regression test
+        run: docker run --rm --network none -v "$GITHUB_WORKSPACE:/repo:ro" csf-security-test bash "/repo/$TEST_SUITE_DIR/run.sh"
+
   compatibility:
     uses: ./.github/workflows/compatibility.yml

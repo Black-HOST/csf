@@ -30,7 +30,6 @@ Listen [::]:[SSLPORT]
 	<IfModule mod_lsapi.c>
 		lsapi_user_group [USER] [USER]
 	</IfModule>
-	ScriptAlias /local-bin /usr/bin
 	<FilesMatch "\.(inc|php)$">
 		[PHPHANDLER]
 	</FilesMatch>
