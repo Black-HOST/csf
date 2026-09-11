@@ -18,23 +18,28 @@ It groups the checks as follows:
 - **unit → tests** — discovers `.t` files and runs each in its own matrix job.
 - **install → smoke / upgrade / uninstall** — validates the installation lifecycle.
 - **compatibility → distro checks** — calls `.github/workflows/compatibility.yml`.
-- **security → security-tests** — loads `.github/security.json` and runs each suite in its own matrix job, currently `messenger`.
+- **security → security-tests** — discovers suite folders under `.github/tests/security/` and runs each in its own matrix job, currently `messenger`.
 
 Like `unit → tests`, the Actions graph shows a separate `security` discovery
-job feeding the `security-tests` matrix. Add future security suites to
-`.github/security.json` with a unique `name`, a `dockerfile` path, and a Bash
-`script` path relative to the repository root. Each suite runs in its own
-disposable container with networking disabled and the checkout mounted
-read-only at `/repo`. Messenger's Perl unit regressions remain in the normal
-unit-test matrix.
+job feeding the `security-tests` matrix. To add a security suite, create
+`security/<suite>/Dockerfile` and `security/<suite>/run.sh`. CI discovers
+`security/*/Dockerfile`, uses the folder name as the matrix job name, and invokes
+the sibling `run.sh` with Bash. No separate suite manifest is needed. Each suite
+runs in its own disposable container with networking disabled and the checkout
+mounted read-only at `/repo`. Messenger's Perl unit regressions remain in the
+normal unit-test matrix.
 
 ## Directory layout
 
 ```text
 .github/tests/
 ├── README.md            # this document
-├── integration/         # disposable-environment integration tests
 ├── lib/                 # shared test helpers and bootstrap modules
+├── security/            # disposable-environment security suites
+│   └── messenger/
+│       ├── Dockerfile   # Apache/PHP/Perl environment
+│       ├── run.sh       # fixtures, scenarios, and assertions
+│       └── driver.pl    # invokes real Messenger code with test settings
 └── unit/                # unit test files (*.t)
 ```
 
@@ -135,7 +140,7 @@ In practice that means:
 - do not depend on control-panel-specific test utilities
 - do not introduce external branding or references into the local test system
 
-## Messenger Apache integration test
+## Messenger security test
 
 GitHub Actions runs this as **messenger** in the `security-tests` matrix,
 after the **security** discovery job in `.github/workflows/tests.yml`.
@@ -144,8 +149,8 @@ Run this test only in a disposable Docker container. It writes real CSF/Apache
 paths inside that container and never installs CSF or changes the host firewall:
 
 ```bash
-docker build -f .github/tests/integration/Dockerfile.messenger-apache -t csf-messenger-test .
-docker run --rm --network none -v "$PWD:/repo:ro" csf-messenger-test bash /repo/.github/tests/integration/messenger-apache.sh
+docker build -f .github/tests/security/messenger/Dockerfile -t csf-messenger-test .
+docker run --rm --network none -v "$PWD:/repo:ro" csf-messenger-test bash /repo/.github/tests/security/messenger/run.sh
 ```
 
 The test uses a harmless CGI response as a vulnerable positive control, then
@@ -154,12 +159,27 @@ fresh and retained v15.03 templates, two TLS virtual hosts, custom settings,
 unchanged installed template bytes, and repeated regeneration. It does not
 exercise real firewall redirection or Google's reCAPTCHA service.
 
+### Why the Perl driver is separate
+
+`run.sh` creates the fixtures and checks the HTTPS responses. It calls
+`driver.pl` to supply controlled CSF settings through `TestBootstrap`, load the
+checkout's real `ConfigServer::Messenger` module, and invoke `messengerv3()`.
+The real generator writes the Apache configuration and runs the configured
+Apache validation/reload commands inside the container. This exercises the
+production code without installing or starting the full CSF/LFD stack.
+
+The driver is not a mock implementation of Messenger. Only its configuration
+is mocked in normal mode. In `legacy-control` mode, it temporarily substitutes
+the old, unfiltered template reader to show that the harmless CGI fixture is
+reachable before the fix. The shell script owns the assertions in both modes.
+
 ## Future growth
 
 As coverage expands, this structure can grow without changing the basic workflow model. Likely next steps are:
 
 - more files under `unit/`
 - reusable helpers under `lib/`
-- optional sibling suites later, such as `integration/` or `fixtures/`
+- more suite folders under `security/`
+- shared fixtures when multiple tests need them
 
 The workflow can keep a single `Tests` entrypoint while adding more jobs only when the suite actually needs them.

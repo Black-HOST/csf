@@ -3,10 +3,11 @@
 use strict;
 use warnings;
 use FindBin qw($Bin);
-use lib "$Bin/../lib";
+use lib "$Bin/../../lib";
 use TestBootstrap qw(with_mock_config);
 
-# This driver is used only by messenger-apache.sh in a disposable container.
+# Invokes the real Messenger generator with test settings. The sibling run.sh
+# owns fixtures and assertions; use it only in the disposable Docker container.
 die "Run through the Docker integration test\n" unless -f '/.dockerenv' && $> == 0;
 
 my $mode = shift || '';

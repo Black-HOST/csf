@@ -2,11 +2,12 @@
 # Disposable Docker container only: uses real installed paths and Apache.
 set -euo pipefail
 if [[ ! -f /.dockerenv || $EUID -ne 0 ]]; then
-    echo "Run only in the disposable Docker container documented in ../README.md" >&2
+    echo "Run only in the disposable Docker container documented in .github/tests/README.md" >&2
     exit 1
 fi
 
-repo_root=$(cd "$(dirname "$0")/../../.." && pwd)
+suite_dir=$(cd "$(dirname "$0")" && pwd)
+repo_root=$(cd "$suite_dir/../../../.." && pwd)
 fixture=/tmp/csf-messenger-test
 mkdir -p "$fixture" /usr/local/csf/tpl /var/lib/csf/ssl/{certs,keys,ca} /etc/csf /etc/apache2/csf-messenger
 cp "$repo_root"/tpl/apache.*.txt /usr/local/csf/tpl/
@@ -52,7 +53,7 @@ IncludeOptional /etc/apache2/csf-messenger/csf.messenger.conf
 CONF
 trap 'apache2ctl -k stop >/dev/null 2>&1 || true' EXIT
 
-driver="$repo_root/.github/tests/integration/messenger-apache.pl"
+driver="$suite_dir/driver.pl"
 generated=/etc/apache2/csf-messenger/csf.messenger.conf
 request() {
     curl --silent --show-error --fail --noproxy '*' --retry 10 --retry-connrefused --retry-delay 1 \
