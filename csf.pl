@@ -944,7 +944,6 @@ sub dostart {
 
 	&getethdev;
 	&modprobe;
-	&checkstatemodule;
 
 	$noowner = 0;
 	if ($config{VPS} and $config{SMTP_BLOCK}) {
@@ -5783,58 +5782,6 @@ sub modprobe {
 	return;
 }
 # end modprobe
-###############################################################################
-# start checkstatemodule
-# The SPI ruleset depends on the kernel state/conntrack match for the
-# ESTABLISHED/RELATED accept rules that allow reply and outbound traffic. If
-# the match is unusable (e.g. EL10-family minimal installs without
-# kernel-modules-extra), applying the ruleset would set DROP policies without
-# those accepts and silently block all outbound TCP, or leave a half-applied
-# firewall. Verify the match works before any rules or policies are applied,
-# and fail safe via error() (policies reset to ACCEPT, exit 1) with an
-# actionable message if it does not. This guards both the FASTSTART and the
-# rule-by-rule startup paths
-sub checkstatemodule {
-	unless ($config{LF_SPI} or ($config{IPV6} and $config{IPV6_SPI})) {return}
-
-	my @checks;
-	if ($config{LF_SPI}) {push @checks, $config{IPTABLES}}
-	if ($config{IPV6} and $config{IPV6_SPI}) {push @checks, $config{IP6TABLES}}
-
-	foreach my $iptables (@checks) {
-		my ($childin, $childout);
-		my $cmdpid = open3($childin, $childout, $childout, "$iptables $config{IPTABLESWAIT} -I OUTPUT -p tcp --dport 9999 $statemodule ESTABLISHED -j ACCEPT");
-		my @output = <$childout>;
-		waitpid ($cmdpid, 0);
-		my $status = $? >> 8;
-		chomp @output;
-		if ($output[0] =~ /# Warning: iptables-legacy tables present/) {shift @output}
-
-		my ($childdin, $childdout);
-		my $delpid = open3($childdin, $childdout, $childdout, "$iptables $config{IPTABLESWAIT} -D OUTPUT -p tcp --dport 9999 $statemodule ESTABLISHED -j ACCEPT");
-		my @deloutput = <$childdout>;
-		waitpid ($delpid, 0);
-
-		if ($status != 0) {
-			my $reason = $output[0];
-			if ($reason eq "") {$reason = "exit status $status"}
-			my $hint = "";
-			my $el = 0;
-			if (open (my $OSREL, "<", "/etc/os-release")) {
-				while (my $osline = <$OSREL>) {
-					if ($osline =~ /^PLATFORM_ID=["']?platform:el(\d+)/) {$el = $1}
-				}
-				close ($OSREL);
-			}
-			if ($el >= 10) {
-				$hint = " On EL${el} minimal installs the xt_* netfilter kernel modules are shipped in the separate kernel-modules-extra package - run: dnf install kernel-modules-extra-\$(uname -r), reboot if the modules still fail to load, then try again. If this is a container, the host kernel must provide these modules.";
-			}
-			&error(__LINE__,"*Error* The iptables state module [$statemodule] is not usable with the running kernel via [$iptables] [$reason]. csf cannot create the stateful rules that allow reply/outbound traffic, so starting the firewall would block all connectivity (e.g. all outbound TCP). The firewall has NOT been started and has been reset to ACCEPT.$hint Run 'perl /usr/local/csf/bin/csftest.pl' for a full report");
-		}
-	}
-	return;
-}
-# end checkstatemodule
 ###############################################################################
 # start faststart
 sub faststart {
