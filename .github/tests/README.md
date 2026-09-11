@@ -13,23 +13,23 @@ The goal is to keep the test system simple, portable, and friendly to contributo
 
 The workflow entrypoint is `.github/workflows/tests.yml`.
 
-Right now it contains a single job:
+It groups the checks as follows:
 
-- **Unit** — runs all tests under `.github/tests/unit/`
+- **unit → tests** — discovers `.t` files and runs each in its own matrix job.
+- **install → smoke / upgrade / uninstall** — validates the installation lifecycle.
+- **compatibility → distro checks** — calls `.github/workflows/compatibility.yml`.
+- **security → messenger** — calls `.github/workflows/security.yml` for the isolated Apache/PHP regression test.
 
-The workflow executes:
-
-```bash
-prove -v -r .github/tests/unit/
-```
-
-That means `prove` recursively discovers every `.t` file under `.github/tests/unit/` and runs the full unit suite in one pass.
+Add future security checks as jobs alongside `messenger` in the reusable
+`security.yml` workflow, keeping the main workflow as the entrypoint. Messenger's
+Perl unit regressions remain in the normal unit-test matrix.
 
 ## Directory layout
 
 ```text
 .github/tests/
 ├── README.md            # this document
+├── integration/         # disposable-environment integration tests
 ├── lib/                 # shared test helpers and bootstrap modules
 └── unit/                # unit test files (*.t)
 ```
@@ -132,6 +132,9 @@ In practice that means:
 - do not introduce external branding or references into the local test system
 
 ## Messenger Apache integration test
+
+GitHub Actions runs this as **security / messenger**, through the reusable
+`.github/workflows/security.yml` workflow.
 
 Run this test only in a disposable Docker container. It writes real CSF/Apache
 paths inside that container and never installs CSF or changes the host firewall:

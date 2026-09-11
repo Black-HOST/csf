@@ -1,0 +1,17 @@
+name: "Security"
+
+on:
+  workflow_call:
+
+permissions:
+  contents: read
+
+jobs:
+  messenger:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build disposable Apache test environment
+        run: docker build -f .github/tests/integration/Dockerfile.messenger-apache -t csf-messenger-test .
+      - name: Test fresh and legacy Messenger templates
+        run: docker run --rm --network none -v "$GITHUB_WORKSPACE:/repo:ro" csf-messenger-test bash /repo/.github/tests/integration/messenger-apache.sh
