@@ -1,7 +1,7 @@
 # ConfigServer Security & Firewall (CSF)
 
 <p align="center">
-  <a href="https://github.com/Black-HOST/csf/actions/workflows/release.yml"><img src="https://img.shields.io/github/actions/workflow/status/Black-HOST/csf/release.yml?branch=main&style=for-the-badge" alt="Build"></a>
+  <a href="https://github.com/Black-HOST/csf/wiki"><img src="https://img.shields.io/badge/Documentation-blue.svg?style=for-the-badge" alt="Documentation"></a>
   <a href="https://github.com/Black-HOST/csf/actions/workflows/tests.yml"><img src="https://img.shields.io/github/actions/workflow/status/Black-HOST/csf/tests.yml?branch=main&style=for-the-badge&label=Tests" alt="Tests"></a>
   <a href="https://github.com/Black-HOST/csf/releases"><img src="https://img.shields.io/github/v/tag/Black-HOST/csf?logo=GitHub&label=Release&color=ba5225&style=for-the-badge" alt="Release"></a>
   <a href="https://github.com/Black-HOST/csf/releases"><img src="https://img.shields.io/github/downloads/Black-HOST/csf/total?logo=github&logoColor=FFFFFF&label=Downloads&color=376892&style=for-the-badge" alt="Downloads"></a>
