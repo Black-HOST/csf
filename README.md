@@ -76,3 +76,7 @@ See the [LICENSE](LICENSE) file for details.
 The original code was released by Way to the Web Limited [https://github.com/waytotheweb/scripts](https://web.archive.org/web/20250831101013/https://github.com/waytotheweb/scripts) but was subsequently removed from GitHub. We created a fork from Jonathan (chrirpy) original work at [config-server-scripts](https://github.com/Black-HOST/config-server-scripts) and stands as original reference for all config server scripts.
 
 This fork continues the legacy of Way to the Web Limited and Jonathan Michaelson work on the CSF firewall, with the goal of ensuring this project remains updated and free forever.
+
+### Data attribution
+
+Country Code and ASN data for the `CC_*` features is downloaded from the provider selected with `CC_SRC` in `csf.conf`: MaxMind GeoLite2, DB-IP/ipdeny/iptoasn, or [IPinfo Lite](https://ipinfo.io/lite). IPinfo Lite data is provided by [IPinfo](https://ipinfo.io) under the [CC BY-SA 4.0](https://creativecommons.org/licenses/by-sa/4.0/) license.

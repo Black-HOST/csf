@@ -152,6 +152,11 @@ sub loadconfig {
 			$warning .= "*ERROR*: Country Code Lookups setting MM_LICENSE_KEY must be set in /etc/csf/csf.conf to continue using the MaxMind databases\n";
 		}
 	}
+	if ($config{CC_LOOKUPS} and $config{CC_LOOKUPS} != 4 and $config{CC_SRC} eq "3") {
+		if ($config{IPINFO_TOKEN} eq "") {
+			$warning .= "*ERROR*: Country Code Lookups setting IPINFO_TOKEN must be set in /etc/csf/csf.conf to continue using the IPinfo Lite database\n";
+		}
+	}
 
 	foreach my $cclist ("CC_DENY","CC_ALLOW","CC_ALLOW_FILTER","CC_ALLOW_PORTS","CC_DENY_PORTS","CC_ALLOW_SMTPAUTH") {
 		$config{$cclist} =~ s/\s//g;
@@ -170,6 +175,9 @@ sub loadconfig {
 	if ($config{CC_DENY} or $config{CC_ALLOW} or $config{CC_ALLOW_FILTER} or $config{CC_ALLOW_PORTS} or $config{CC_DENY_PORTS} or $config{CC_ALLOW_SMTPAUTH}) {
 		if ($config{MM_LICENSE_KEY} eq "" and $config{CC_SRC} eq "1") {
 			$warning .= "*ERROR*: Country Code Filters setting MM_LICENSE_KEY must be set in /etc/csf/csf.conf to continue updating the MaxMind databases\n";
+		}
+		if ($config{IPINFO_TOKEN} eq "" and $config{CC_SRC} eq "3") {
+			$warning .= "*ERROR*: Country Code Filters setting IPINFO_TOKEN must be set in /etc/csf/csf.conf to continue updating the IPinfo Lite database\n";
 		}
 	}
 
@@ -374,6 +382,13 @@ sub loadconfig {
 		$config{cc_city} = "http://download.db-ip.com/free/dbip-city-lite-$year-$month.csv.gz";
 		$config{cc_asn} = "http://iptoasn.com/data/ip2asn-combined.tsv.gz";
 		$config{cc_cc} = "http://download.geonames.org/export/dump/countryInfo.txt";
+	}
+	elsif ($config{CC_SRC} eq "3") {
+		$config{cc_src} = "IPinfo Lite";
+		$config{asn_src} = "IPinfo Lite";
+		$config{cc_country} = "https://ipinfo.io/data/ipinfo_lite.csv.gz?token=$config{IPINFO_TOKEN}";
+		$config{cc_city} = $config{cc_country};
+		$config{cc_asn} = $config{cc_country};
 	}
 
 	$config{DOWNLOADSERVER} = &getdownloadserver;

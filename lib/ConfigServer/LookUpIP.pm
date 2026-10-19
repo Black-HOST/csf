@@ -28,6 +28,7 @@ use IPC::Open3;
 use JSON::Tiny;
 use Net::IP;
 use Socket;
+use Text::ParseWords qw(parse_line);
 use ConfigServer::CheckIP qw(checkip);
 use ConfigServer::Config;
 use ConfigServer::URLGet;
@@ -430,6 +431,50 @@ sub geo_binary {
 			}
 			close ($CSV);
 		}
+	} elsif ($config{CC_SRC} eq "3") {
+		my $file = "/var/lib/csf/Geo/ipinfo_lite.csv";
+		my $start = 0;
+		my $end = -s $file;
+		$end += 4;
+		my $cnt = 0;
+		open (my $CSV, "<", $file);
+		flock ($CSV, LOCK_SH);
+		while (1) {
+			my $mid = int (($end + $start) / 2);
+			seek ($CSV, $mid, 0);
+			my $a = <$CSV>;
+			my $b = <$CSV>;
+			chomp $b;
+			my @fields;
+			if ($b =~ /\"/) {@fields = parse_line(',', 0, $b)} else {@fields = split(/\,/,$b)}
+			my ($network,$country_name,$country_iso_code,undef,undef,$asn,$asnorg) = @fields;
+			if ($network eq "" or !checkip(\$network)) {return}
+			if (checkip(\$network) ne $ipv) {
+				if ($ipv eq "6") {
+					$start = $mid;
+				} else {
+					$end = $mid;
+				}
+			} else {
+				my $netip = Net::IP->new($network);
+				my $firstip = $netip->binip();
+				my $lastip = $netip->last_bin();
+				if (Net::IP::ip_bincomp($ip,'lt',$firstip) == 1) {
+					$end = $mid;
+				}
+				elsif (Net::IP::ip_bincomp($ip,'gt',$lastip) == 1) {
+					$start = $mid + 1;
+				} else {
+					$return[0] = $country_iso_code;
+					$return[1] = $country_name;
+					if ($config{CC_LOOKUPS} == 3 and $asn ne "") {$return[4] = "$asn $asnorg"}
+					last;
+				}
+			}
+			$cnt++;
+			if ($cnt > 200) {return}
+		}
+		close ($CSV);
 	}
 	return @return;
 }

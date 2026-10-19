@@ -27,6 +27,7 @@ use IPC::Open3;
 use Net::CIDR::Lite;
 use POSIX qw(:sys_wait_h sysconf strftime setsid);
 use Socket;
+use Text::ParseWords qw(parse_line);
 use ConfigServer::Config;
 use ConfigServer::Slurp qw(slurp);
 use ConfigServer::CheckIP qw(checkip cccheckip);
@@ -742,6 +743,9 @@ if ($config{CC_LOOKUPS}) {
 	if ($config{CC_LOOKUPS} != 4 and $config{MM_LICENSE_KEY} eq "" and $config{CC_SRC} eq "1") {
 		logfile("*ERROR*: Country Code Lookups setting MM_LICENSE_KEY must be set in /etc/csf/csf.conf to continue updating the MaxMind databases");
 	}
+	if ($config{CC_LOOKUPS} != 4 and $config{IPINFO_TOKEN} eq "" and $config{CC_SRC} eq "3") {
+		logfile("*ERROR*: Country Code Lookups setting IPINFO_TOKEN must be set in /etc/csf/csf.conf to continue updating the IPinfo Lite database");
+	}
 	logfile("Country Code Lookups...");
 	&countrycodelookups;
 	$ccltimeout = 0;
@@ -750,6 +754,9 @@ if ($config{CC_LOOKUPS}) {
 if ($config{CC_DENY} or $config{CC_ALLOW} or $config{CC_ALLOW_FILTER} or $config{CC_ALLOW_PORTS} or $config{CC_DENY_PORTS} or $config{CC_ALLOW_SMTPAUTH}) {
 	if ($config{MM_LICENSE_KEY} eq "" and $config{CC_SRC} eq "1") {
 		logfile("*ERROR*: Country Code Filters setting MM_LICENSE_KEY must be set in /etc/csf/csf.conf to continue updating the MaxMind databases");
+	}
+	if ($config{IPINFO_TOKEN} eq "" and $config{CC_SRC} eq "3") {
+		logfile("*ERROR*: Country Code Filters setting IPINFO_TOKEN must be set in /etc/csf/csf.conf to continue updating the IPinfo Lite database");
 	}
 	logfile("Country Code Filters...");
 	&countrycode;
@@ -5166,11 +5173,15 @@ sub countrycode {
 		logfile("CC Error: Country Code Lookups setting MM_LICENSE_KEY must be set in /etc/csf/csf.conf to continue using the MaxMind databases");
 		return;
 	}
+	if ($config{IPINFO_TOKEN} eq "" and $config{CC_SRC} eq "3") {
+		logfile("CC Error: Country Code Lookups setting IPINFO_TOKEN must be set in /etc/csf/csf.conf to continue using the IPinfo Lite database");
+		return;
+	}
 
 	$SIG{CHLD} = 'IGNORE';
 	unless (defined ($childpid = fork)) {
 		&cleanup(__LINE__,"*Error* cannot fork: $!");
-	} 
+	}
 	$forks{$childpid} = 1;
 	unless ($childpid) {
 		my $timer = time;
@@ -5486,8 +5497,115 @@ sub countrycode {
 					}
 				}
 			}
+		} elsif ($config{CC_SRC} eq "3") {
+			unless (-e "/var/lib/csf/Geo/ipinfo_lite.csv") {$getgeo = 1}
+			if (-z "/var/lib/csf/Geo/ipinfo_lite.csv") {$getgeo = 1}
+
+			if (-e "/var/lib/csf/Geo/ipinfo_lite.csv") {
+				my $mtime = (stat("/var/lib/csf/Geo/ipinfo_lite.csv"))[9];
+				my $days = int((time - $mtime) / 86400);
+				if ($days >= $config{CC_INTERVAL}) {$getgeo = 1}
+			} else {$getgeo = 1}
+			if ($getgeo) {
+				unless (-e $config{GUNZIP}) {
+					logfile("Error: gunzip binary ($config{GUNZIP}) does not exist");
+					exit;
+				}
+				logfile("CC: Retrieving $config{cc_src} Country/ASN database [https://ipinfo.io/data/ipinfo_lite.csv.gz]");
+				my ($status, $text) = $urlget->urlget("$config{cc_country}","/var/lib/csf/Geo/ipinfo_lite.csv.gz");
+				if ($status) {
+					logfile("CC Error: Unable to retrieve $config{cc_src} Country/ASN database [https://ipinfo.io/data/ipinfo_lite.csv.gz] - $text");
+				} else {
+					if (-e "/var/lib/csf/Geo/ipinfo_lite.csv") {unlink "/var/lib/csf/Geo/ipinfo_lite.csv"}
+					my @data;
+					eval {
+						local $SIG{__DIE__} = undef;
+						local $SIG{'ALRM'} = sub {die};
+						alarm(180);
+						@data = &syscommand(__LINE__,$config{GUNZIP},"/var/lib/csf/Geo/ipinfo_lite.csv.gz");
+						alarm(0);
+					};
+					alarm(0);
+					if ($@) {
+						logfile("CC Error: Unable to gunzip $config{cc_src} Country/ASN database /var/lib/csf/Geo/ipinfo_lite.csv.gz - timeout");
+					}
+					if (-z "/var/lib/csf/Geo/ipinfo_lite.csv" or !(-e "/var/lib/csf/Geo/ipinfo_lite.csv")) {
+						logfile("CC Error: ipinfo_lite.csv empty or missing");
+					} else {
+						my $now = time;
+						utime ($now,$now,"/var/lib/csf/Geo/ipinfo_lite.csv");
+					}
+					foreach my $cc (split(/\,/,"$config{CC_DENY},$config{CC_ALLOW},$config{CC_ALLOW_FILTER},$config{CC_ALLOW_PORTS},$config{CC_DENY_PORTS},$config{CC_ALLOW_SMTPAUTH}")) {
+						if ($cc) {
+							$cc = lc $cc;
+							$cclist{$cc} = 1;
+						}
+					}
+				}
+				unlink "/var/lib/csf/Geo/ipinfo_lite.csv.gz";
+			}
+
+			$0 = "lfd - processing countrycode lists";
+			foreach my $cc (split(/\,/,"$config{CC_DENY},$config{CC_ALLOW},$config{CC_ALLOW_FILTER},$config{CC_ALLOW_PORTS},$config{CC_DENY_PORTS},$config{CC_ALLOW_SMTPAUTH}")) {
+				if ($cc) {
+					$cc = lc $cc;
+					if (-e "/var/lib/csf/zone/$cc.zone") {
+						my $mtime = (stat("/var/lib/csf/zone/$cc.zone"))[9];
+						my $days = int((time - $mtime) / 86400);
+						if ($days >= $config{CC_INTERVAL}) {$getgeo = 1; $cclist{$cc} = 1}
+					} else {$getgeo = 1;  $cclist{$cc} = 1}
+					if (-z "/var/lib/csf/zone/$cc.zone") {$getgeo = 1;  $cclist{$cc} = 1}
+
+					if ($cclist{$cc}) {
+						if ($config{CC_DENY} =~ /\b$cc\b/i) {$redo_deny = 1}
+						if ($config{CC_ALLOW} =~ /\b$cc\b/i) {$redo_allow = 1}
+						if ($config{CC_ALLOW_FILTER} =~ /\b$cc\b/i) {$redo_allow_filter = 1}
+						if ($config{CC_ALLOW_PORTS} =~ /\b$cc\b/i) {$redo_allow_ports = 1}
+						if ($config{CC_DENY_PORTS} =~ /\b$cc\b/i) {$redo_deny_ports = 1}
+						if ($config{CC_ALLOW_SMTPAUTH} =~ /\b$cc\b/i) {$redo_allow_smtpauth = 1}
+					}
+				}
+			}
+
+			if ($getgeo) {
+				logfile("CC: Processing $config{cc_src} Country/ASN database");
+				my %dcidr;
+				open (my $IN, "<", "/var/lib/csf/Geo/ipinfo_lite.csv");
+				flock ($IN, LOCK_SH);
+				while (my $record = <$IN>) {
+					chomp $record;
+					my @fields;
+					if ($record =~ /\"/) {@fields = parse_line(',', 0, $record)} else {@fields = split(/\,/,$record)}
+					my ($network,undef,$country_code,undef,undef,$asn,undef) = @fields;
+					if ($network =~ /:/) {next}
+					foreach my $cc (keys %cclist) {
+						if (length($cc) == 2) {
+							if (uc($cc) eq $country_code) {$dcidr{$cc}{$network} = 1}
+						}
+						elsif (uc($cc) eq uc($asn)) {$dcidr{$cc}{$network} = 1}
+					}
+				}
+				close ($IN);
+				foreach my $cc (keys %cclist) {
+					logfile("CC: Extracting zone from $config{cc_src} Country/ASN database for [".uc($cc)."]");
+					if (keys %{$dcidr{$cc}} eq 0) {
+						logfile("CC: No entries found for [".uc($cc)."] in /var/lib/csf/Geo/ipinfo_lite.csv");
+					} else {
+						my $ipscidr = Net::CIDR::Lite->new;
+						foreach my $key (keys %{$dcidr{$cc}}) {
+							eval {local $SIG{__DIE__} = undef; $ipscidr->add_any($key)};
+						}
+						sysopen (my $CIDROUT, "/var/lib/csf/zone/$cc.zone", O_WRONLY | O_CREAT);
+						flock ($CIDROUT, LOCK_EX);
+						seek ($CIDROUT, 0, 0);
+						truncate ($CIDROUT, 0);
+						foreach my $key ($ipscidr->list) {print $CIDROUT "$key\n"}
+						close ($CIDROUT);
+					}
+				}
+			}
 		}
-		
+
 		if ($force) {
 			$redo_deny = 1;
 			$redo_allow = 1;
@@ -5882,11 +6000,15 @@ sub countrycodelookups {
 		logfile("CC Error: Country Code Filters setting MM_LICENSE_KEY must be set in /etc/csf/csf.conf to continue using the MaxMind databases");
 		return;
 	}
+	if ($config{IPINFO_TOKEN} eq "" and $config{CC_SRC} eq "3") {
+		logfile("CC Error: Country Code Filters setting IPINFO_TOKEN must be set in /etc/csf/csf.conf to continue using the IPinfo Lite database");
+		return;
+	}
 
 	$SIG{CHLD} = 'IGNORE';
 	unless (defined ($childpid = fork)) {
 		&cleanup(__LINE__,"*Error* cannot fork: $!");
-	} 
+	}
 	$forks{$childpid} = 1;
 	unless ($childpid) {
 		my $timer = time;
@@ -6097,6 +6219,48 @@ sub countrycodelookups {
 					}
 				}
 			}
+		} elsif ($config{CC_SRC} eq "3") {
+			my $getgeo = 0;
+			my $geofile = "/var/lib/csf/Geo/ipinfo_lite.csv";
+			if (-e $geofile) {
+				if (-z $geofile) {$getgeo = 1}
+				my $mtime = (stat($geofile))[9];
+				my $days = int((time - $mtime) / 86400);
+				if ($days >= $config{CC_INTERVAL}) {$getgeo = 1}
+			} else {$getgeo = 1}
+			if ($getgeo) {
+				unless (-e $config{GUNZIP}) {
+					logfile("Error: gunzip binary ($config{GUNZIP}) does not exist");
+					exit;
+				}
+				logfile("CCL: Retrieving $config{cc_src} Country/ASN database [https://ipinfo.io/data/ipinfo_lite.csv.gz]");
+				my ($status, $text) = $urlget->urlget("$config{cc_country}","/var/lib/csf/Geo/ipinfo_lite.csv.gz");
+				if ($status) {
+					logfile("CCL Error: Unable to retrieve $config{cc_src} Country/ASN database [https://ipinfo.io/data/ipinfo_lite.csv.gz] - $text");
+				} else {
+					if (-e $geofile) {unlink $geofile}
+					my @data;
+					eval {
+						local $SIG{__DIE__} = undef;
+						local $SIG{'ALRM'} = sub {die};
+						alarm(180);
+						@data = &syscommand(__LINE__,$config{GUNZIP},"/var/lib/csf/Geo/ipinfo_lite.csv.gz");
+						alarm(0);
+					};
+					alarm(0);
+					if ($@) {
+						logfile("CCL Error: Unable to gunzip $config{cc_src} Country/ASN database /var/lib/csf/Geo/ipinfo_lite.csv.gz - timeout");
+					}
+					if (!(-e $geofile) or -z $geofile) {
+						logfile("CCL Error: $geofile empty or missing");
+					} else {
+						my $now = time;
+						utime ($now,$now,$geofile);
+						logfile("CCL: Retrieved $config{cc_src} Country/ASN database");
+					}
+				}
+				unlink "/var/lib/csf/Geo/ipinfo_lite.csv.gz";
+			}
 		}
 
 		&listlock("unlock");
@@ -6272,6 +6436,49 @@ sub countrycode6 {
 						logfile("CC: Country Code IPv6 Zone [".uc($cc)."] retrieved");
 					}
 					sleep 1;
+				}
+			}
+		}
+	} elsif ($config{CC_SRC} eq "3") {
+		if ($getgeo) {
+			logfile("CC: Processing $config{cc_src} Country/ASN IPv6 database");
+			my %dcidr;
+			open (my $IN, "<", "/var/lib/csf/Geo/ipinfo_lite.csv");
+			flock ($IN, LOCK_SH);
+			while (my $record = <$IN>) {
+				chomp $record;
+				my @fields;
+				if ($record =~ /\"/) {@fields = parse_line(',', 0, $record)} else {@fields = split(/\,/,$record)}
+				my ($network,undef,$country_code,undef,undef,$asn,undef) = @fields;
+				unless ($network =~ /:/) {next}
+				foreach my $cc (keys %cclist) {
+					if (length($cc) == 2) {
+						if (uc($cc) eq $country_code) {$dcidr{$cc}{$network} = 1}
+					}
+					elsif (uc($cc) eq uc($asn)) {$dcidr{$cc}{$network} = 1}
+				}
+			}
+			close ($IN);
+			foreach my $cc (keys %cclist) {
+				logfile("CC: Extracting IPv6 zone from $config{cc_src} Country/ASN database for [".uc($cc)."]");
+				if (keys %{$dcidr{$cc}} eq 0) {
+					logfile("CC: No IPv6 entries found for [".uc($cc)."] in /var/lib/csf/Geo/ipinfo_lite.csv");
+				} else {
+					my $ipscidr = Net::CIDR::Lite->new;
+					foreach my $key (keys %{$dcidr{$cc}}) {
+						eval {local $SIG{__DIE__} = undef; $ipscidr->add_any($key)};
+					}
+					sysopen (my $CIDROUT, "/var/lib/csf/zone/$cc.zone6", O_WRONLY | O_CREAT);
+					flock ($CIDROUT, LOCK_EX);
+					seek ($CIDROUT, 0, 0);
+					truncate ($CIDROUT, 0);
+					foreach my $key ($ipscidr->list) {
+						# Net::CIDR::Lite compresses a single trailing zero group to "::"
+						# (e.g. 2001:db8:0:0:0:0:1::/112), a form cccheckip does not accept
+						$key =~ s/^((?:[0-9A-Fa-f]{1,4}:){7}):/${1}0/;
+						print $CIDROUT "$key\n";
+					}
+					close ($CIDROUT);
 				}
 			}
 		}
